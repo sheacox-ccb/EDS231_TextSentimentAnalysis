@@ -1,0 +1,188 @@
+---
+title: "Lab01_NYTimes"
+author: "Julia Parish"
+date: "4/6/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Connect to the New York Times API and send a query
+```{r}
+library(jsonlite) #convert results from API queries into R-friendly formats 
+library(tidyverse) 
+library(tidytext) #text data management and analysis
+library(ggplot2) #plot word frequencies and publication dates
+```
+
+We have to decide which New York Times articles we are interested in examining. For this exercise, I chose articles about Deb Haaland, the current US Secretary of the Interior. As a member of the Laguna Pueblo Tribe, Haaland is the first Native American to serve as Cabinet secretary. 
+
+```{r}
+# create an object called x with the results of our query ("haaland")
+# the from JSON flatten the JSON object, then convert to a data frame
+t <- fromJSON("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=haaland&api-key=qUngwwaLSVRerrzAB0TgUdXSHf93H6ea", flatten = TRUE) #the string following "key=" is your API key 
+
+# key=NTKBHbsb6XFEkGymGumAiba7n3uBvs8V
+
+class(t) #what type of object is t?
+
+t <- t %>% 
+  data.frame()
+
+#Inspect our data
+class(t) #now what is it?
+dim(t) # how big is it? 10 articles, 33 variables (fields)
+
+names(t) # what variables are we working with?
+# response.docs.abstract where docs is a list, and abstract is a list within docs
+
+#t <- readRDS("nytDat.rds") #in case of API emergency :)
+```
+
+```{r}
+t$response.docs.snippet[9] # one sentence pulled from article (example is 9th one), $ referring to column. snippet is a NYTimes API term
+
+#assign a snippet to x to use as fodder for stringr functions.  You can follow along using the sentence on the next line.
+
+x <- "Her nomination as secretary of the interior is historic, but as the first Native cabinet member, she would have to strike a delicate balance." 
+
+tolower(x) #make all tokens uniform
+str_split(x, ','); str_split(x, 't') # x is currently one string, but can split & tell R where to split it.
+
+str_replace(x, 'historic', 'without precedent') # replace token with another
+
+str_replace(x, ' ', '_') #first one
+#how do we replace all of them?
+str_replace_all(x, ' ', '_') 
+
+str_detect(x, 't'); str_detect(x, 'tive') ### is pattern in the string? T/F
+
+str_locate(x, 't'); str_locate_all(x, 'as')
+```
+
+# parameters for bigger query
+```{r}
+term <- "Haaland" # Need to use + to string together separate words
+begin_date <- "20210120"
+end_date <- "20220401"
+
+#construct the query url using API operators
+baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=",term,
+                  "&begin_date=",begin_date,"&end_date=",end_date,
+                  "&facet_filter=true&api-key=","qUngwwaLSVRerrzAB0TgUdXSHf93H6ea", sep="")
+
+#examine our query url
+baseurl
+```
+
+```{r}
+#this code allows for obtaining multiple pages of query results 
+ initialQuery <- fromJSON(baseurl)
+maxPages <- round((initialQuery$response$meta$hits[1] / 10)-1) 
+
+pages <- list()
+for(i in 0:maxPages){
+  nytSearch <- fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% data.frame() 
+  message("Retrieving page ", i)
+  pages[[i+1]] <- nytSearch 
+  Sys.sleep(6) 
+}
+class(nytSearch)
+
+#need to bind the pages and create a tibble from nytDat
+# rowbind pages object
+
+nytDat <- rbind_pages(pages)
+```
+
+```{r}
+nytDat %>% 
+  group_by(response.docs.type_of_material) %>%
+  summarize(count=n()) %>%
+  mutate(percent = (count / sum(count))*100) %>%
+  ggplot() +
+  geom_bar(aes(y=percent, x=response.docs.type_of_material, fill=response.docs.type_of_material), stat = "identity") + coord_flip()
+```
+
+```{r}
+nytDat %>%
+  mutate(pubDay=gsub("T.*","",response.docs.pub_date)) %>% # T. is a regular expression, removing anywhere where T.* (time) showed up replaced with blank 
+  group_by(pubDay) %>%
+  summarise(count=n()) %>%
+  filter(count >= 2) %>%
+  ggplot() +
+  geom_bar(aes(x=reorder(pubDay, count), y=count), stat="identity") + coord_flip()
+```
+
+```{r}
+names(nytDat)
+
+paragraph <- names(nytDat)[6] #The 6th column, "response.doc.lead_paragraph", is the one we want here.  
+tokenized <- nytDat %>%
+  unnest_tokens(word, paragraph) #unnest paragraph and convert to collection of single words; one row is one paragraph, this expands dataframe and converts each word in paragraph to an individual row. 
+
+tokenized %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 5) %>% #illegible with all the words displayed; # using filter to show words used 5x
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+### remove common words that are not meaningful (a, the, of, etc)
+```{r}
+data(stop_words) # pulls in data object from data package (tidytext)
+
+tokenized <- tokenized %>%
+  anti_join(stop_words) # removes rows with matching word b/w two objects (tokenized & stop words)
+
+tokenized %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 5) %>% # using filter to show words used 5x
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+
+```
+
+```{r}
+#inspect the list of tokens (words)
+tokenized$word 
+
+clean_tokens <- str_replace_all(tokenized$word,"land[a-z,A-Z]*","land") #stem tribe words
+clean_tokens <- str_remove_all(clean_tokens, "[:digit:]") #remove all numbers. :digit: is a regular expression character
+
+clean_tokens <- str_remove_all(clean_tokens, "washington")
+clean_tokens <- gsub("’s", '', clean_tokens) # base R function, removing "'s" possesion
+
+tokenized$clean <- clean_tokens
+
+tokenized %>%
+  count(clean, sort = TRUE) %>%
+  filter(n > 10) %>% #illegible with all the words displayed
+  mutate(clean = reorder(clean, n)) %>%
+  ggplot(aes(n, clean)) +
+  geom_col() +
+  labs(y = NULL)
+
+#remove the empty strings
+tib <-subset(tokenized, clean!="")
+
+#reassign
+tokenized <- tib
+
+#try again
+tokenized %>%
+  count(clean, sort = TRUE) %>%
+  filter(n > 10) %>% #illegible with all the words displayed
+  mutate(clean = reorder(clean, n)) %>%
+  ggplot(aes(n, clean)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+
