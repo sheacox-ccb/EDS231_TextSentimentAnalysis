@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 # Text Data in R
@@ -20,30 +20,69 @@ library(tidyverse)
 library(tidytext) #text data management and analysis
 library(ggplot2) #plot word frequencies and publication dates
 ```
+
 ## Key Word Selection & Query NY Times API
 
 Pick an interesting environmental key word(s) and use the jsonlite package to query the API. Pick something high profile enough and over a large enough time frame that your query yields enough articles for an interesting examination.
 
 ```{r}
-# the from JSON flatten the JSON object
-coalash <- fromJSON("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=coal+ash&api-key=qUngwwaLSVRerrzAB0TgUdXSHf93H6ea", flatten = TRUE)
+#set search parameters
+api_key <- "qUngwwaLSVRerrzAB0TgUdXSHf93H6ea"
+term <- "coal+ash" # Need to use + to string together separate words
+begin_date <- "20080101" # YYYYMMDD
+end_date <- "20220409" # YYYYMMDD
 ```
 
 ```{r}
-# convert to a data frame
-coalash <- coalash %>% 
-  data.frame()
-
-#Inspect data
-class(coalash) 
-dim(coalash) # how big is it? 10 articles, 34 variables
-
-names(coalash) # list of variables
+# construct the query url using API operators
+baseurl <- paste0("http://api.nytimes.com/svc/search/v2/articlesearch.json?q=", 
+                  term, "&begin_date=", begin_date, 
+                  "&end_date=", end_date, "&facet_filter=true&api-key=", 
+                  api_key, 
+                  sep = "")
+baseurl
 ```
 
+```{r}
+# this code allows for obtaining multiple pages of query results
+initialQuery <- fromJSON(baseurl)
 
+maxPages <- round((initialQuery$response$meta$hits[1] / 100) - 1) 
+
+pages <- list()
+for(i in 0:maxPages){
+  coalashSearch <- fromJSON(paste0(baseurl, "&page=", i), flatten = TRUE) %>% 
+    data.frame() 
+  message("Retrieving page ", i)
+  pages[[i + 1]] <- coalashSearch 
+  Sys.sleep(6) # keeps you from hitting limit for API
+}
+
+# check class of nytSearch object
+class(coalashSearch)
+
+# need to bind the pages and create a tibble
+coalashData <- rbind_pages(pages)
+```
 
 ## Recreate the publications per day and word frequency plots using the first paragraph
+
+```{r}
+coalashData %>% 
+  mutate(pubDay = gsub("T.*", "", response.docs.pub_date)) %>% # replace "T." with "" - remove time but leave dates
+  group_by(pubDay) %>%
+  summarise(count = n()) %>%
+  ggplot() +
+  geom_bar(aes(x = reorder(pubDay, count), 
+               y = count), 
+           color = "grey58", fill = "slategrey",
+           stat = "identity") +
+  labs(x = "Number of Articles per Day", y = "Publication Date",
+       title = "NYTimes Articles on Coal Ash per Publication Day",
+       caption = "Data Source: New York Times") +
+  theme_minimal() +
+  coord_flip()
+```
 
 
 ## Make some (at least 3) transformations to the corpus (add stopword(s), stem a key term and its variants, remove numbers)
