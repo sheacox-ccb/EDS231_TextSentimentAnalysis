@@ -161,6 +161,8 @@ clean_tokens <- str_replace_all(string = clean_tokens,
                                 pattern = "plant[a-z, A-Z]*", 
                                 replacement = "plant") 
 
+#clean_tokens <- str_replace_all(string = clean_tokens, pattern = "grill(?<=.)", replacement = "grill") 
+
 # stem the token "spill" as it may occur in the plural form
 clean_tokens <- str_replace_all(string = clean_tokens,
                                 pattern = "spill[a-z, A-Z]*", 
@@ -186,13 +188,20 @@ clean_tokens <- str_replace_all(string = clean_tokens,
                                 pattern = "seam[a-z, A-Z]*", 
                                 replacement = "seam") 
 
-# remove the word recipe. Searching for coal ash resulted in a number of recipes. 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "recipe")
+# remove the word "recipe". Searching for coal ash resulted in a number of recipes. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "(?<=recipe).")
 
-# remove the word grilled. Searching for coal ash resulted in a number of recipes. 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "grilled")
+# remove 'ed' from the stem "grill". Searching for coal ash resulted in a number of recipes which involve grilling. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "(?<=grill)ed")
+
+# remove 'ing' from the stem "grill". Searching for coal ash resulted in a number of recipes which involve grilling. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "(?<=grill)ing")
+
+# remove the token "grill". Searching for coal ash resulted in a number of recipes which involve grilling. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "grill")
+
+# remove the token "meat". Searching for coal ash resulted in a number of meat recipes. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "meat")
 
 # remove possessive and replace with blank
 clean_tokens <- gsub("’s", '', clean_tokens)
@@ -226,7 +235,7 @@ wordfreq_plot2 <- tokenized %>%
 
 wordfreq_plot2
 ```
-
+\newpage
 
 ## 4. Recreate the publications per day and word frequency plots using the headlines variable (response.docs.headline.main). 
 
@@ -306,27 +315,27 @@ clean_tokens <- str_replace_all(string = clean_tokens,
                                 pattern = "rule[a-z, A-Z]*", 
                                 replacement = "rule") 
 
-# remove the token "recipe". Searching for coal ash resulted in a number of recipes. 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "recipe")
-
 # remove the word "joliet" 
 clean_tokens <- str_remove_all(string = clean_tokens, 
                                pattern = "joliet")
 
-# remove the tokens "grilled, grilling, grill". Searching for coal ash resulted in a number of recipes. 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "grilled")
+# remove the word "recipe". Searching for coal ash resulted in a number of recipes. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "(?<=recipe).")
 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "grilling")
+# remove 'ed' from the stem "grill". Searching for coal ash resulted in a number of recipes which involve grilling. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "(?<=grill)ed")
 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "grill")
+# remove 'ing' from the stem "grill". Searching for coal ash resulted in a number of recipes which involve grilling. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "(?<=grill)ing")
+
+# remove the token "grill". Searching for coal ash resulted in a number of recipes which involve grilling. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "grill")
+
+# remove the token "meat". Searching for coal ash resulted in a number of meat recipes. 
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "meat")
 
 # remove the token "chicken". Searching for coal ash resulted in a number of recipes. 
-clean_tokens <- str_remove_all(string = clean_tokens, 
-                               pattern = "chicken")
+clean_tokens <- str_remove_all(string = clean_tokens, pattern = "chicken")
 
 # remove possessive and replace with blank
 clean_tokens <- gsub("’s", '', clean_tokens)
