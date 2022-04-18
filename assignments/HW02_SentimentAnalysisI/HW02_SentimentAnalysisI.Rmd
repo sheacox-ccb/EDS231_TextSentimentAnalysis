@@ -1,0 +1,53 @@
+---
+title: "Topic 3 - Sentiment Analysis I"
+author: "Julia Parish"
+date: '2022-04-19'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Sentiment
+
+This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from Nexis Uni. 
+
+## Load Packages
+
+
+```{r}
+library(tidyr) #text analysis in R
+library(lubridate) #working with date data
+library(pdftools) #read in pdfs
+library(tidyverse)
+library(tidytext)
+library(here)
+library(LexisNexisTools) #Nexis Uni data wrangling
+library(sentimentr)
+library(readr)
+library(here)
+```
+
+
+# 1. Access the Nexis Uni database through the UCSB library:
+
+```{r}
+data <- "/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW02_SentimentAnalysisI"
+```
+
+
+
+# 2. Choose a key search term or terms to define a set of articles.
+
+# 3. Use your search term along with appropriate filters to obtain and download a batch of at least 100 full text search results (.docx).
+
+# 4. Read your Nexis article document into RStudio.
+
+# 5. This time use the full text of the articles for the analysis. First clean any artifacts of the data collection process (hint: this type of thing should be removed: “Apr 04, 2022( Biofuels Digest: http://www.biofuelsdigest.com/ Delivered by Newstex”))
+
+# 6. Explore your data a bit and try to replicate some of the analyses above presented in class if you’d like (not necessary).
+
+# 7. Plot the amount of emotion words (the 8 from nrc) as a percentage of all the emotion words used each day (aggregate text from articles published on the same day). How does the distribution of emotion words change over time? Can you think of any reason this would be the case?
+
+
