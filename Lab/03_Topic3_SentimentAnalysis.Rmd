@@ -164,6 +164,7 @@ my_files <- list.files(pattern = ".docx", path = getwd(),
                        full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
 
 dat <- lnt_read(my_files) #Object of class 'LNT output', has 3 tibbes (metadata, article, 1 st paragraph)
+
 meta_df <- dat@meta # 1st tibble in dat
 articles_df <- dat@articles # 2nd tibble in dat
 paragraphs_df <- dat@paragraphs # 3rd tibble in dat
