@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 # Sentiment
@@ -14,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from Nexis Uni. 
 
 ## Load Packages
-
 
 ```{r}
 library(tidyr) #text analysis in R
@@ -29,16 +28,32 @@ library(readr)
 library(here)
 ```
 
-
 # 1. Access the Nexis Uni database through the UCSB library:
 
-```{r}
-data <- "/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW02_SentimentAnalysisI"
+```{r, eval=FALSE}
+data <- "/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW02_SentimentAnalysisI/data"
+2
+files <- list.files(pattern = ".docx", path = data, 
+                    full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
+
+dat_invspe <- lnt_read(files)
+
 ```
 
-
-
 # 2. Choose a key search term or terms to define a set of articles.
+
+The search term I chose is "invasive species".
+
+```{r}
+meta_invspe_df <- dat_invspe@meta %>% # 1st tibble in dat
+  distinct(Headline, .keep_all = TRUE) 
+
+articles_invspe_df <- dat_invspe@articles # 2nd tibble in dat
+paragraphs_invspe_df <- dat_invspe@paragraphs # 3rd tibble in dat
+
+num_invspe_articles <- nrow(meta_invspe_df)
+```
+
 
 # 3. Use your search term along with appropriate filters to obtain and download a batch of at least 100 full text search results (.docx).
 
