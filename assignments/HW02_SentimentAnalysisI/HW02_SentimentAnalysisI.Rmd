@@ -262,7 +262,19 @@ plot1 <- nrc_sent %>%
 plot1
 ```
 
-\newpage
+```{r}
+plot2 <- nrc_sent %>% 
+  group_by(sentiment) %>% 
+  slice_max(n, n = 10) %>% 
+  ggplot(aes(x = n, y = reorder(word, n), fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL) + 
+  theme_minimal()
+
+plot2
+```
 
 # 6.B. How does the distribution of emotion words change over time? Can you think of any reason this would be the case?
 
