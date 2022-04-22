@@ -1,0 +1,67 @@
+---
+title: "Topic 04 - Sentiment Analysis II"
+author: "Julia Parish"
+date: '2022-04-26'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Sentiment Analyis II
+
+This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from Twitter. 
+
+Original assignment instructions can be found [here](https://maro406.github.io/EDS_231-text-sentiment/topic_4.html)
+
+### Load Library
+```{r}
+library(quanteda)
+library(quanteda.sentiment)
+library(quanteda.textstats)
+library(tidyverse)
+library(tidytext)
+library(lubridate)
+library(wordcloud)
+library(reshape2)
+library(here)
+```
+
+## Load IPPC tweet data & create plot of data
+```{r ipcc tweet data}
+raw_tweets <- read.csv(here("assignments/HW04_SentimentAnalysisII/data/IPCC_tweets_April1-10_sample.csv"))
+
+dat<- raw_tweets[,c(5,7)] # Extract Date and Title fields
+
+tweets <- tibble(text = dat$Title,
+                  id = seq(1:length(dat$Title)),
+                 date = as.Date(dat$Date,'%m/%d/%y'))
+
+
+head(tweets$text, n = 10)
+
+#simple plot of tweets per day
+tweets %>%
+  count(date) %>%
+  ggplot(aes(x = date, y = n))+
+  geom_line() +
+  labs(title = "IPCC Tweets per Day",
+       subtitle = "April 01 - April 10, 2022",
+       x = "Date",
+       y = "Number of Tweets") + 
+  theme_minimal()
+```
+
+
+# Questions
+
+## 1. Think about how to further clean a twitter data set. Let’s assume that the mentions of twitter accounts is not useful to us. Remove them from the text field of the tweets tibble.
+
+## 2. Compare the ten most common terms in the tweets per day. Do you notice anything interesting?
+
+## 3. Adjust the wordcloud in the “wordcloud” chunk by coloring the positive and negative words so they are identifiable.
+
+## 4. Let’s say we are interested in the most prominent entities in the Twitter discussion. Which are the top 10 most tagged accounts in the data set. Hint: the “explore_hashtags” chunk is a good starting point.
+
+## 5. The Twitter data download comes with a variable called “Sentiment” that must be calculated by Brandwatch. Use your own method to assign each tweet a polarity score (Positive, Negative, Neutral) and compare your classification to Brandwatch’s (hint: you’ll need to revisit the “raw_tweets” data frame).
