@@ -15,7 +15,7 @@ This text sentiment analysis was completed as an assignment for the course, Envi
 
 Original assignment instructions can be found [here](https://maro406.github.io/EDS_231-text-sentiment/topic_4.html)
 
-### Load Library
+### Load Libraries
 ```{r}
 library(quanteda)
 library(quanteda.sentiment)
@@ -27,6 +27,8 @@ library(wordcloud)
 library(reshape2)
 library(here)
 library(rtweet)
+library(paletteer)
+
 ```
 
 ## Load IPPC tweet data & create plot of data
@@ -60,35 +62,56 @@ tweets %>%
 ## 1. Think about how to further clean a twitter data set. Let’s assume that the mentions of twitter accounts is not useful to us. Remove them from the text field of the tweets tibble.
 
 ```{r}
-# tweet_cleaner <- function(x)
-#   {gsub("http[[:alnum:]]*",'', x)
-#   gsub('http\\S+\\s*', '', x) ## Remove URLs
-#   gsub('\\b+RT', '', x) ## Remove RT
-#   gsub('#\\S+', '', x) ## Remove Hashtags
-#   gsub('@\\S+', '', x) ## Remove Mentions
-#   gsub('[[:cntrl:]]', '', x) ## Remove Controls and special characters
-#   gsub("\\d", '', x) ## Remove Controls and special characters
-#   gsub('[[:punct:]]', '', x) ## Remove Punctuations
-#   gsub("^[[:space:]]*","",x) ## Remove leading whitespaces
-#   gsub("[[:space:]]*$","",x) ## Remove trailing whitespaces
-#   gsub(' +',' ',x) ## Remove extra whitespaces
-# }
 
+# keep original text column to track changes
 tweets_clean <- tweets %>% 
-  mutate(text_clean = text)  # keeping a column of the original text as a check
+  mutate(text_clean = text)  
 
-tweets_clean$text_clean <- gsub("@[^[:space:]]*", "", tweets_clean$text_clean) 
+# remove mentions and website links
+tweets_clean$text_clean <- str_remove(tweets_clean$text_clean, "@[a-z,A-Z]*")
+tweets_clean$text_clean <- str_remove(tweets_clean$text_clean, "[:digit:]")
 
 tweets_clean$text_clean <- gsub("http.*","", tweets_clean$text_clean)
 
 tweets_clean$text_clean <- gsub("https.*","", tweets_clean$text_clean)
+
+# remove punctuations
+tweets_clean$text_clean <- gsub('[[:punct:]]', '', tweets_clean$text_clean) 
+
+#tokenise tweets and remove stop words
+words <- tweets_clean %>%
+  select(id, date, text, text_clean) %>%
+  unnest_tokens(output = word, input = text_clean, token = "words") %>%
+  anti_join(stop_words, by = "word")
+
+#clean tokens
+# remove numbers
+clean_tokens <- str_remove_all(words$word, "[:digit:]")
+
+# remove mentions
+clean_tokens <- str_remove_all(clean_tokens, "@[a-z,A-Z]*")
+
+# remove apostrophes
+clean_tokens <- gsub("’s", '', clean_tokens)
+
+# remove unnecessary twitter formats
+clean_tokens <- str_remove_all(clean_tokens, "t.co")
+
+words$clean <- clean_tokens
+
+# remove the empty strings
+tib <-subset(words, clean != "")
+
+#reassign
+words <- tib
 
 ```
 
 ```{r}
 ipcc_tweets_clean <- tweets_clean %>%
   dplyr::select(text_clean) %>%
-  unnest_tokens(word, text_clean)
+  unnest_tokens(word, text_clean) %>%
+  anti_join(stop_words, by = "word")
 ```
 
 
@@ -101,6 +124,7 @@ ipcc_tweets_clean <- tweets_clean %>%
 ## 5. The Twitter data download comes with a variable called “Sentiment” that must be calculated by Brandwatch. Use your own method to assign each tweet a polarity score (Positive, Negative, Neutral) and compare your classification to Brandwatch’s (hint: you’ll need to revisit the “raw_tweets” data frame).
 
 
+## Bonus - Emoji Frequency Exploration
 
 ```{r}
 # extract emojis from tweets 
@@ -118,13 +142,13 @@ all_emojis_in_tweets %>%
   top_n(5, n) %>% 
 ggplot() +
   geom_col(aes(x = fct_reorder(emoji, n), y = n, fill = n), 
-           colour = "grey30", width = 1) +
-  labs(x = "", y = "Count", title = "Most used emojis") +
-  coord_flip() +
-   scale_fill_gradientn("n", colors = terrain.colors(10), guide = "none") +
-  scale_y_continuous(expand = c(0, 0),
-                     breaks=seq(0, 10, 2), limits = c(0,10)) +
-  scale_x_discrete(expand = c(0, 0)) 
+           color = "grey58", width = 1) +
+  scale_fill_gradientn("n", colors = brewer.pal(5, "Set2")) +
+  labs(x = "", y = "Count", 
+       title = "Most used emojis in IPCC tweets",
+       subtitle = "April 01 - April 10, 2022") +
+  coord_flip()
+
 ```
 
 

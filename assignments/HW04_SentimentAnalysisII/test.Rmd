@@ -1,0 +1,105 @@
+---
+title: "test"
+author: "Julia Parish"
+date: '2022-04-23'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load Library
+```{r}
+library(quanteda)
+library(quanteda.sentiment)
+library(quanteda.textstats)
+library(tidyverse)
+library(tidytext)
+library(lubridate)
+library(wordcloud)
+library(reshape2)
+library(here)
+library(rtweet)
+library(paletteer)
+
+```
+
+## Load IPPC tweet data & create plot of data
+```{r ipcc tweet data}
+raw_tweets <- read.csv("https://raw.githubusercontent.com/MaRo406/EDS_231-text-sentiment/main/dat/IPCC_tweets_April1-10_sample.csv", header=TRUE)
+
+dat<- raw_tweets[,c(5,7)] # Extract Date and Title fields
+
+tweets <- tibble(text = dat$Title,
+                  id = seq(1:length(dat$Title)),
+                 date = as.Date(dat$Date,'%m/%d/%y'))
+
+head(tweets$text, n = 10)
+```
+
+# Questions
+
+## 1. Think about how to further clean a twitter data set. Let’s assume that the mentions of twitter accounts is not useful to us. Remove them from the text field of the tweets tibble.
+
+```{r create_corpus}
+corpus <- corpus(dat$Title) #enter quanteda
+summary(corpus)
+# text: tweet ID, Types: species words, Tokens: total words
+```
+
+
+```{r quanteda_cleaning}
+tokens <- tokens(corpus) #tokenize the text so each doc (page, in this case) is a list of tokens (words)
+
+#examine the uncleaned version
+tokens
+
+#clean it up: remove punctuation and numbers
+tokens <- tokens(tokens, remove_punct = TRUE,  preserve_tags = TRUE, remove_numbers = TRUE, remove_url = TRUE, split_tags = FALSE) %>% 
+               tokens_keep(pattern = "#*")
+
+#stopwords lexicon built in to quanteda
+tokens <- tokens_select(tokens, stopwords('english'),selection='remove') 
+
+# convert to lower case
+tokens <- tokens_tolower(tokens)
+
+#clean tokens
+# remove numbers
+tokens_clean <- str_remove_all(tokens, "[:digit:]")
+
+# remove mentions
+tokens_clean <- str_remove_all(tokens_clean, "@[a-z,A-Z]*")
+
+# remove hashtags
+tokens_clean <- str_remove_all(tokens_clean, "#[a-z,A-Z]*")
+
+# create document feature matrix of tweets with mentions and hashtags
+tweet_dfm <- dfm(tokens)
+head(tweet_dfm)
+
+# create document feature matrix of tweets without mentions and hashtags
+tweet_clean_dfm <- dfm(tokens_clean)
+head(tweet_clean_dfm@Dimnames[["features"]])
+```
+
+```{r, hashtags}
+# Extract most common hashtags
+
+tag_dfm <- dfm_select(tweet_dfm, pattern = "#*")
+toptag <- names(topfeatures(tag_dfm, 50))
+
+head(toptag)
+```
+
+```{r}
+# Extract most frequently mentioned usernames
+user_dfm <- dfm_select(tweet_dfm, pattern = "@*")
+topuser <- names(topfeatures(user_dfm, 50))
+head(topuser)
+```
+
+
+
+
