@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.12.2)  22 APR 2022 16:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.12.2)  22 APR 2022 22:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -512,7 +512,7 @@ S231_TextSentiment/repository/EDS231_TextSentimentAnalysis[]
  []
 
 
-Overfull \hbox (1052.74055pt too wide) in paragraph at lines 272--272
+Overfull \hbox (1052.74055pt too wide) in paragraph at lines 288--288
 []\T1/lmtt/m/n/10 ##  [1] "thank you, followers, for the great photo suggestion
 s for our upcoming IPCC report - on Monday you will find the lucky one selected
  for our cover from among your submissions!\n\nwe now need a good picture on #b
@@ -527,7 +527,7 @@ See the inputenc package documentation for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.272 \end{verbatim}
+l.288 \end{verbatim}
                      
 Here is how much of TeX's memory you used:
  12856 strings out of 478994
