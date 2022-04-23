@@ -1,0 +1,323 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Topic 04 - Sentiment Analysis II},
+  pdfauthor={Julia Parish},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Topic 04 - Sentiment Analysis II}
+\author{Julia Parish}
+\date{2022-04-26}
+
+\begin{document}
+\maketitle
+
+\hypertarget{sentiment-analyis-ii}{%
+\section{Sentiment Analyis II}\label{sentiment-analyis-ii}}
+
+This text sentiment analysis was completed as an assignment for the
+course, Environmental Data Science 231: Text and Sentiment Analysis for
+Environmental Problems. The data was sourced from Twitter.
+
+Original assignment instructions can be found
+\href{https://maro406.github.io/EDS_231-text-sentiment/topic_4.html}{here}
+
+\hypertarget{load-library}{%
+\subsubsection{Load Library}\label{load-library}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(quanteda)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Package version: 3.2.1
+## Unicode version: 13.0
+## ICU version: 69.1
+\end{verbatim}
+
+\begin{verbatim}
+## Parallel computing: 8 of 8 threads used.
+\end{verbatim}
+
+\begin{verbatim}
+## See https://quanteda.io for tutorials and examples.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(quanteda.sentiment)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'quanteda.sentiment'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:quanteda':
+## 
+##     data_dictionary_LSD2015
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(quanteda.textstats)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## -- Attaching packages --------------------------------------- tidyverse 1.3.1 --
+\end{verbatim}
+
+\begin{verbatim}
+## v ggplot2 3.3.5     v purrr   0.3.4
+## v tibble  3.1.6     v dplyr   1.0.8
+## v tidyr   1.2.0     v stringr 1.4.0
+## v readr   2.1.2     v forcats 0.5.1
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tidytext)}
+\FunctionTok{library}\NormalTok{(lubridate)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'lubridate'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     date, intersect, setdiff, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(wordcloud)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: RColorBrewer
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(reshape2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'reshape2'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:tidyr':
+## 
+##     smiths
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(here)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## here() starts at /Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis
+\end{verbatim}
+
+\hypertarget{load-ippc-tweet-data-create-plot-of-data}{%
+\subsection{Load IPPC tweet data \& create plot of
+data}\label{load-ippc-tweet-data-create-plot-of-data}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{raw\_tweets }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"assignments/HW04\_SentimentAnalysisII/data/IPCC\_tweets\_April1{-}10\_sample.csv"}\NormalTok{))}
+
+\NormalTok{dat}\OtherTok{\textless{}{-}}\NormalTok{ raw\_tweets[,}\FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{,}\DecValTok{7}\NormalTok{)] }\CommentTok{\# Extract Date and Title fields}
+
+\NormalTok{tweets }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{text =}\NormalTok{ dat}\SpecialCharTok{$}\NormalTok{Title,}
+                  \AttributeTok{id =} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Title)),}
+                 \AttributeTok{date =} \FunctionTok{as.Date}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Date,}\StringTok{\textquotesingle{}\%m/\%d/\%y\textquotesingle{}}\NormalTok{))}
+
+
+\FunctionTok{head}\NormalTok{(tweets}\SpecialCharTok{$}\NormalTok{text, }\AttributeTok{n =} \DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "thank you, followers, for the great photo suggestions for our upcoming IPCC report - on Monday you will find the lucky one selected for our cover from among your submissions!\n\nwe now need a good picture on #biofuels . any suggestions please for which we can get copyrights fast?"        
+##  [2] "Greenpeace: The real solution to the climate crisis will require a rapid transition away from fossil fuels. \n\nWhat else we expect from the upcoming #IPCC report on climate solutions, set for publication on Monday, 4 April ⬇️  https://t.co/EC6a25S7tY"                                      
+##  [3] "Governments have a responsibility to ensure that #IPCCReport is grounded in rapid phaseout of fossil fuel use and production — not #FalseClimateSolutions. \n\nRead more in our open letter: https://t.co/4larBPgeba https://t.co/Fv1OphPmac"                                                    
+##  [4] "Next week, the IPCC will publish a new report detailing their new models and policy pathways. \n\nWant to study up before the headlines? Read @bertrandhb's second long read on CCS, explaining how and why IPCC models use so much saviour tech.\n\nhttps://t.co/6yBf0j7UWA"                    
+##  [5] "Live stream of virtual IPCC press conference releasing the report on mitigation of climate change, 9 a.m. GMT o... https://t.co/IqRCvvQxyX"                                                                                                                                                      
+##  [6] "Attention journalists: The deadline for embargoed materials for the upcoming @IPCC_CH report on climate mitigation has been extended to TODAY at 5:59 pm EDT. Register here: https://t.co/fLc4eHcOmm https://t.co/0eIlPb21kz"                                                                    
+##  [7] "The IPCC Report and “The Physics of Climate Change” https://t.co/xnxP3fup2a"                                                                                                                                                                                                                     
+##  [8] "With time running short and most of the Summary for Policymakers yet to be approved, #IPCC Working Group III added a fourth plenary to Thursday’s packed schedule in an attempt to make headway.\n\nMore ➡️ https://t.co/CRKNFzykYE\n\n#ClimateChange #AR6 #ClimateReport https://t.co/EoaasmOEZf"
+##  [9] "A helpful perspective on how to talk about the scenarios discussed in the forthcoming IPCC report https://t.co/Kpiim9NgNw"                                                                                                                                                                       
+## [10] "The private sector is an integral component of the water cycle and has much to lose as critical climate and water risks grow. \n\nThis presents an opportunity for collective action, writes Kirsten James of the sustainability nonprofit @CeresNews.  \n\nhttps://t.co/pC3kiJ6R1t"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# \#simple plot of tweets per day}
+\CommentTok{\# tweets \%\textgreater{}\%}
+\CommentTok{\#   count(date) \%\textgreater{}\%}
+\CommentTok{\#   ggplot(aes(x = date, y = n))+}
+\CommentTok{\#   geom\_line() +}
+\CommentTok{\#   labs(title = "IPCC Tweets per Day",}
+\CommentTok{\#        subtitle = "April 01 {-} April 10, 2022",}
+\CommentTok{\#        x = "Date",}
+\CommentTok{\#        y = "Number of Tweets") + }
+\CommentTok{\#   theme\_minimal()}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{questions}{%
+\section{Questions}\label{questions}}
+
+\hypertarget{think-about-how-to-further-clean-a-twitter-data-set.-lets-assume-that-the-mentions-of-twitter-accounts-is-not-useful-to-us.-remove-them-from-the-text-field-of-the-tweets-tibble.}{%
+\subsection{1. Think about how to further clean a twitter data set.
+Let's assume that the mentions of twitter accounts is not useful to us.
+Remove them from the text field of the tweets
+tibble.}\label{think-about-how-to-further-clean-a-twitter-data-set.-lets-assume-that-the-mentions-of-twitter-accounts-is-not-useful-to-us.-remove-them-from-the-text-field-of-the-tweets-tibble.}}
+
+\hypertarget{compare-the-ten-most-common-terms-in-the-tweets-per-day.-do-you-notice-anything-interesting}{%
+\subsection{2. Compare the ten most common terms in the tweets per day.
+Do you notice anything
+interesting?}\label{compare-the-ten-most-common-terms-in-the-tweets-per-day.-do-you-notice-anything-interesting}}
+
+\hypertarget{adjust-the-wordcloud-in-the-wordcloud-chunk-by-coloring-the-positive-and-negative-words-so-they-are-identifiable.}{%
+\subsection{3. Adjust the wordcloud in the ``wordcloud'' chunk by
+coloring the positive and negative words so they are
+identifiable.}\label{adjust-the-wordcloud-in-the-wordcloud-chunk-by-coloring-the-positive-and-negative-words-so-they-are-identifiable.}}
+
+\hypertarget{lets-say-we-are-interested-in-the-most-prominent-entities-in-the-twitter-discussion.-which-are-the-top-10-most-tagged-accounts-in-the-data-set.-hint-the-explore_hashtags-chunk-is-a-good-starting-point.}{%
+\subsection{4. Let's say we are interested in the most prominent
+entities in the Twitter discussion. Which are the top 10 most tagged
+accounts in the data set. Hint: the ``explore\_hashtags'' chunk is a
+good starting
+point.}\label{lets-say-we-are-interested-in-the-most-prominent-entities-in-the-twitter-discussion.-which-are-the-top-10-most-tagged-accounts-in-the-data-set.-hint-the-explore_hashtags-chunk-is-a-good-starting-point.}}
+
+\hypertarget{the-twitter-data-download-comes-with-a-variable-called-sentiment-that-must-be-calculated-by-brandwatch.-use-your-own-method-to-assign-each-tweet-a-polarity-score-positive-negative-neutral-and-compare-your-classification-to-brandwatchs-hint-youll-need-to-revisit-the-raw_tweets-data-frame.}{%
+\subsection{5. The Twitter data download comes with a variable called
+``Sentiment'' that must be calculated by Brandwatch. Use your own method
+to assign each tweet a polarity score (Positive, Negative, Neutral) and
+compare your classification to Brandwatch's (hint: you'll need to
+revisit the ``raw\_tweets'' data
+frame).}\label{the-twitter-data-download-comes-with-a-variable-called-sentiment-that-must-be-calculated-by-brandwatch.-use-your-own-method-to-assign-each-tweet-a-polarity-score-positive-negative-neutral-and-compare-your-classification-to-brandwatchs-hint-youll-need-to-revisit-the-raw_tweets-data-frame.}}
+
+\end{document}

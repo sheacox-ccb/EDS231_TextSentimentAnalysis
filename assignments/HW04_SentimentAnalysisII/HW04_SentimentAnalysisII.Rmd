@@ -41,7 +41,7 @@ tweets <- tibble(text = dat$Title,
 
 head(tweets$text, n = 10)
 
-#simple plot of tweets per day
+# #simple plot of tweets per day
 tweets %>%
   count(date) %>%
   ggplot(aes(x = date, y = n))+
@@ -49,7 +49,7 @@ tweets %>%
   labs(title = "IPCC Tweets per Day",
        subtitle = "April 01 - April 10, 2022",
        x = "Date",
-       y = "Number of Tweets") + 
+       y = "Number of Tweets") +
   theme_minimal()
 ```
 

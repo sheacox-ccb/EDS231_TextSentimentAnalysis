@@ -31,7 +31,7 @@ library(here)
 # 0. Using the “IPCC” Nexis Uni data set from the class presentation and the pseudo code discussed in class, recreate Figure 1A from Froelich et al. 2017 (Date x # of 1) positive, 2) negative, 3) neutral headlines):
 
 ```{r Froelich 2017}
-data <- "/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW02_SentimentAnalysisI/data"
+data <- "/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW03_SentimentAnalysisI/data"
 
 ipcc_data <- list.files(pattern = "Nexis_IPCC_Results.docx", path = data, 
                         full.names = TRUE, recursive = TRUE, ignore.case = TRUE)
@@ -238,21 +238,63 @@ words <- tib
 # nrc sentiment words
 nrc <- get_sentiments('nrc') %>% 
   filter(!sentiment %in% c("positive", "negative"))
+```
 
-# join nrc sentiment and words dataframes
+```{r}
 nrc_sent <- words %>% 
   inner_join(nrc) %>% 
-  na.omit() %>% 
-  group_by(Date, sentiment) %>% 
-  count() %>% # count number of sentiment words per day
-  ungroup() %>% 
-  group_by(Date) %>%
-  mutate(n_max_day = sum(n),
-         percent = round((n/n_max_day)*100, 2))   # add total word 
+  count(word, sentiment, sort = TRUE) %>% 
+  ungroup()
+```
+
+```{r}
+plot1 <- nrc_sent %>% 
+  group_by(sentiment) %>% 
+  slice_max(n, n = 10) %>% 
+  ggplot(aes(x = n, y = reorder(word, n), fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+
+plot1
+```
+
+```{r}
+words_per_day <- words %>% 
+  inner_join(nrc_sent) %>% 
+  group_by(Date) %>% 
+  count(name = "words_per_day")
+```
+
+```{r}
+invspe_sent_per <- words %>% 
+  inner_join(nrc_sent) %>% 
+  count(Date, sentiment) %>% 
+  left_join(words_per_day, by = "Date") %>% 
+  mutate(percent = round(((n / words_per_day) * 100), 2))
+```
+
+```{r}
+start_date <- min(invspe_sent_per$Date)
+end_date <- max(invspe_sent_per$Date)
+
+plot2 <- ggplot(data = invspe_sent_per, aes(x = Date, y = percent)) +
+  geom_line(aes(color = sentiment), size = 0.75) +
+  labs(title = "Invasive Species Text Sentiment Analysis",
+       subtitle = "News Articles",
+       caption = "Data source: Nexis Uni",
+       y = "Percent Total Daily Words") +
+  theme_classic() +
+  scale_x_date(date_labels = "%b %d, %Y", limits = c(start_date, end_date), expand=c(0,0), breaks = "2 month") +
+  scale_y_continuous(breaks = seq(0, 100, by = 5), expand=c(0,0)) +
+  theme(legend.position = 'bottom')
+
+plot2
 ```
 
 ```{r, fig.cap="News media sentiment of the term 'invasive species' between April 17, 2021 & April 17, 2022"}
-plot1 <- nrc_sent %>%
+plot3 <- invspe_sent_per %>%
   ggplot(aes(x = Date, y = percent, color = sentiment)) +
   geom_smooth(se = FALSE) +
   labs(x = "Date",
@@ -261,23 +303,10 @@ plot1 <- nrc_sent %>%
        caption = "Data source: Nexus Uni") +
   theme_minimal()
 
-plot1
+plot3
 ```
 
-```{r}
-# plot2 <- nrc_sent %>% 
-#   group_by(sentiment) %>% 
-#   slice_max(n, n = 10) %>% 
-#   ggplot(aes(x = n, y = reorder(word, n), fill = sentiment)) +
-#   geom_col(show.legend = FALSE) +
-#   facet_wrap(~sentiment, scales = "free_y") +
-#   labs(x = "Contribution to sentiment",
-#        y = NULL) + 
-#   theme_minimal()
-# 
-# plot2
-```
-
+\newpage
 # 6.B. How does the distribution of emotion words change over time? Can you think of any reason this would be the case?
 
 It seems as trust goes down, the sentiments of fear, anger, and distrust increase. There was possibly an outbreak of a new invasive species over this time.
