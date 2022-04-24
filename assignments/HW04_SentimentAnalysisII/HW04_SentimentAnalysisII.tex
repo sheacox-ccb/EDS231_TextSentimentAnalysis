@@ -99,6 +99,8 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\setlength{\parindent}{1em}
+\usepackage{float}
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -120,141 +122,24 @@ Environmental Problems. The data was sourced from Twitter.
 Original assignment instructions can be found
 \href{https://maro406.github.io/EDS_231-text-sentiment/topic_4.html}{here}
 
-\hypertarget{load-library}{%
-\subsubsection{Load Library}\label{load-library}}
+\hypertarget{load-libraries}{%
+\subsubsection{Load Libraries}\label{load-libraries}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(quanteda)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Package version: 3.2.1
-## Unicode version: 13.0
-## ICU version: 69.1
-\end{verbatim}
-
-\begin{verbatim}
-## Parallel computing: 8 of 8 threads used.
-\end{verbatim}
-
-\begin{verbatim}
-## See https://quanteda.io for tutorials and examples.
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(quanteda.sentiment)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## 
-## Attaching package: 'quanteda.sentiment'
-\end{verbatim}
-
-\begin{verbatim}
-## The following object is masked from 'package:quanteda':
-## 
-##     data_dictionary_LSD2015
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(quanteda.textstats)}
 \FunctionTok{library}\NormalTok{(tidyverse)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## -- Attaching packages --------------------------------------- tidyverse 1.3.1 --
-\end{verbatim}
-
-\begin{verbatim}
-## v ggplot2 3.3.5     v purrr   0.3.4
-## v tibble  3.1.6     v dplyr   1.0.8
-## v tidyr   1.2.0     v stringr 1.4.0
-## v readr   2.1.2     v forcats 0.5.1
-\end{verbatim}
-
-\begin{verbatim}
-## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(tidytext)}
 \FunctionTok{library}\NormalTok{(lubridate)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## 
-## Attaching package: 'lubridate'
-\end{verbatim}
-
-\begin{verbatim}
-## The following objects are masked from 'package:base':
-## 
-##     date, intersect, setdiff, union
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(wordcloud)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Loading required package: RColorBrewer
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(reshape2)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## 
-## Attaching package: 'reshape2'
-\end{verbatim}
-
-\begin{verbatim}
-## The following object is masked from 'package:tidyr':
-## 
-##     smiths
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(here)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## here() starts at /Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(rtweet)}
+\FunctionTok{library}\NormalTok{(paletteer)}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-## 
-## Attaching package: 'rtweet'
-\end{verbatim}
-
-\begin{verbatim}
-## The following object is masked from 'package:purrr':
-## 
-##     flatten
-\end{verbatim}
 
 \hypertarget{load-ippc-tweet-data-create-plot-of-data}{%
 \subsection{Load IPPC tweet data \& create plot of
@@ -315,48 +200,200 @@ tibble.}\label{think-about-how-to-further-clean-a-twitter-data-set.-lets-assume-
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# tweet\_cleaner \textless{}{-} function(x)}
-\CommentTok{\#   \{gsub("http[[:alnum:]]*",\textquotesingle{}\textquotesingle{}, x)}
-\CommentTok{\#   gsub(\textquotesingle{}http\textbackslash{}\textbackslash{}S+\textbackslash{}\textbackslash{}s*\textquotesingle{}, \textquotesingle{}\textquotesingle{}, x) \#\# Remove URLs}
-\CommentTok{\#   gsub(\textquotesingle{}\textbackslash{}\textbackslash{}b+RT\textquotesingle{}, \textquotesingle{}\textquotesingle{}, x) \#\# Remove RT}
-\CommentTok{\#   gsub(\textquotesingle{}\#\textbackslash{}\textbackslash{}S+\textquotesingle{}, \textquotesingle{}\textquotesingle{}, x) \#\# Remove Hashtags}
-\CommentTok{\#   gsub(\textquotesingle{}@\textbackslash{}\textbackslash{}S+\textquotesingle{}, \textquotesingle{}\textquotesingle{}, x) \#\# Remove Mentions}
-\CommentTok{\#   gsub(\textquotesingle{}[[:cntrl:]]\textquotesingle{}, \textquotesingle{}\textquotesingle{}, x) \#\# Remove Controls and special characters}
-\CommentTok{\#   gsub("\textbackslash{}\textbackslash{}d", \textquotesingle{}\textquotesingle{}, x) \#\# Remove Controls and special characters}
-\CommentTok{\#   gsub(\textquotesingle{}[[:punct:]]\textquotesingle{}, \textquotesingle{}\textquotesingle{}, x) \#\# Remove Punctuations}
-\CommentTok{\#   gsub("\^{}[[:space:]]*","",x) \#\# Remove leading whitespaces}
-\CommentTok{\#   gsub("[[:space:]]*$","",x) \#\# Remove trailing whitespaces}
-\CommentTok{\#   gsub(\textquotesingle{} +\textquotesingle{},\textquotesingle{} \textquotesingle{},x) \#\# Remove extra whitespaces}
-\CommentTok{\# \}}
-
+\CommentTok{\# keep original text column to track changes}
 \NormalTok{tweets\_clean }\OtherTok{\textless{}{-}}\NormalTok{ tweets }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{text\_clean =}\NormalTok{ text)  }\CommentTok{\# keeping a column of the original text as a check}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{text\_clean =}\NormalTok{ text)  }
 
-\NormalTok{tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"@[\^{}[:space:]]*"}\NormalTok{, }\StringTok{""}\NormalTok{, tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean) }
+\CommentTok{\# remove mentions and website links}
+\NormalTok{tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean }\OtherTok{\textless{}{-}} \FunctionTok{str\_remove}\NormalTok{(tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean, }\StringTok{"@[a{-}z,A{-}Z]*"}\NormalTok{)}
+
+\NormalTok{tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean }\OtherTok{\textless{}{-}} \FunctionTok{str\_remove}\NormalTok{(tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean, }\StringTok{"[:digit:]"}\NormalTok{)}
 
 \NormalTok{tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"http.*"}\NormalTok{,}\StringTok{""}\NormalTok{, tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean)}
 
 \NormalTok{tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"https.*"}\NormalTok{,}\StringTok{""}\NormalTok{, tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean)}
+
+\CommentTok{\# remove punctuations}
+\NormalTok{tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{\textquotesingle{}[[:punct:]]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}\textquotesingle{}}\NormalTok{, tweets\_clean}\SpecialCharTok{$}\NormalTok{text\_clean) }
+
+\CommentTok{\#tokenise tweets and remove stop words}
+\NormalTok{words }\OtherTok{\textless{}{-}}\NormalTok{ tweets\_clean }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(id, date, text, text\_clean) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{unnest\_tokens}\NormalTok{(}\AttributeTok{output =}\NormalTok{ word, }\AttributeTok{input =}\NormalTok{ text\_clean, }\AttributeTok{token =} \StringTok{"words"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{anti\_join}\NormalTok{(stop\_words, }\AttributeTok{by =} \StringTok{"word"}\NormalTok{)}
+
+\CommentTok{\#clean tokens}
+\CommentTok{\# remove numbers}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_remove\_all}\NormalTok{(words}\SpecialCharTok{$}\NormalTok{word, }\StringTok{"[:digit:]"}\NormalTok{)}
+
+\CommentTok{\# remove mentions}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_remove\_all}\NormalTok{(clean\_tokens, }\StringTok{"@[a{-}z,A{-}Z]*"}\NormalTok{)}
+
+\CommentTok{\# remove apostrophes}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"’s"}\NormalTok{, }\StringTok{\textquotesingle{}\textquotesingle{}}\NormalTok{, clean\_tokens)}
+
+\CommentTok{\# remove unnecessary twitter formats}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_remove\_all}\NormalTok{(clean\_tokens, }\StringTok{"t.co"}\NormalTok{)}
+
+\CommentTok{\# stem the token "ipcc" as there are some plural instances}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"ipcc[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"ipcc"}\NormalTok{)}
+
+
+\CommentTok{\# stem the token "fuel" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"fuel[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"fuel"}\NormalTok{)}
+
+\CommentTok{\# stem the token "biofuel" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"biofuel[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"biofuel"}\NormalTok{)}
+
+\CommentTok{\# stem the token "headline" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"headline[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"headline"}\NormalTok{)}
+
+\CommentTok{\# stem the token "regulation" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"regulation[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"regulation"}\NormalTok{)}
+
+\CommentTok{\# stem the token "follower" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"follower[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"follower"}\NormalTok{)}
+
+\CommentTok{\# stem the token "suggestion" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"suggestion[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"suggestion"}\NormalTok{)}
+
+\CommentTok{\# stem the token "solution" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"solution[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"solution"}\NormalTok{)}
+
+\CommentTok{\# stem the token "reduction" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"reduction[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"reduction"}\NormalTok{)}
+
+\CommentTok{\# stem the token "risk" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"risk[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"risk"}\NormalTok{)}
+
+\CommentTok{\# stem the token "scenario" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"scenario[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"scenario"}\NormalTok{)}
+
+\CommentTok{\# stem the token "submission" as it may occur in the plural form}
+\NormalTok{clean\_tokens }\OtherTok{\textless{}{-}} \FunctionTok{str\_replace\_all}\NormalTok{(}\AttributeTok{string =}\NormalTok{ clean\_tokens,}
+                                \AttributeTok{pattern =} \StringTok{"submission[a{-}z, A{-}Z]*"}\NormalTok{, }
+                                \AttributeTok{replacement =} \StringTok{"submission"}\NormalTok{)}
+
+\NormalTok{words}\SpecialCharTok{$}\NormalTok{clean }\OtherTok{\textless{}{-}}\NormalTok{ clean\_tokens}
+
+\CommentTok{\# remove the empty strings}
+\NormalTok{tib }\OtherTok{\textless{}{-}}\FunctionTok{subset}\NormalTok{(words, clean }\SpecialCharTok{!=} \StringTok{""}\NormalTok{)}
+
+\CommentTok{\#reassign}
+\NormalTok{words }\OtherTok{\textless{}{-}}\NormalTok{ tib}
+
+\FunctionTok{head}\NormalTok{(words)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{ipcc\_tweets\_clean }\OtherTok{\textless{}{-}}\NormalTok{ tweets\_clean }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(text\_clean) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{unnest\_tokens}\NormalTok{(word, text\_clean)}
-\end{Highlighting}
-\end{Shaded}
+\begin{verbatim}
+## # A tibble: 6 x 5
+##      id date       text                                              word  clean
+##   <int> <date>     <chr>                                             <chr> <chr>
+## 1     1 2022-04-01 "thank you, followers, for the great photo sugge~ foll~ foll~
+## 2     1 2022-04-01 "thank you, followers, for the great photo sugge~ photo photo
+## 3     1 2022-04-01 "thank you, followers, for the great photo sugge~ sugg~ sugg~
+## 4     1 2022-04-01 "thank you, followers, for the great photo sugge~ upco~ upco~
+## 5     1 2022-04-01 "thank you, followers, for the great photo sugge~ ipcc  ipcc 
+## 6     1 2022-04-01 "thank you, followers, for the great photo sugge~ repo~ repo~
+\end{verbatim}
 
 \hypertarget{compare-the-ten-most-common-terms-in-the-tweets-per-day.-do-you-notice-anything-interesting}{%
 \subsection{2. Compare the ten most common terms in the tweets per day.
 Do you notice anything
 interesting?}\label{compare-the-ten-most-common-terms-in-the-tweets-per-day.-do-you-notice-anything-interesting}}
 
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{words\_freq }\OtherTok{\textless{}{-}}\NormalTok{ words }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(clean) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarise}\NormalTok{(}\FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{top\_n}\NormalTok{(}\DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{rename}\NormalTok{(}\StringTok{"freq"} \OtherTok{=} \StringTok{"n()"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(clean)}
+
+\NormalTok{words\_top10 }\OtherTok{\textless{}{-}} \FunctionTok{inner\_join}\NormalTok{(words\_freq, words, }\AttributeTok{by =} \StringTok{"clean"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(date, clean) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{rename}\NormalTok{(}\StringTok{"freq"} \OtherTok{=} \StringTok{"n()"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{top10term\_plot }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ words\_top10, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ date, }\AttributeTok{y =}\NormalTok{ freq)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{color =}\NormalTok{ clean)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"10 Most Common IPCC{-}related Tweet Terms"}\NormalTok{,}
+       \AttributeTok{subtitle =} \StringTok{"April 01 {-} April 10, 2022"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Date"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Frequency"}\NormalTok{,}
+       \AttributeTok{color =} \StringTok{"Term"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_paletteer\_d}\NormalTok{(}\StringTok{"rcartocolor::Safe"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }
+
+\NormalTok{top10term\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{HW04_SentimentAnalysisII_files/figure-latex/unnamed-chunk-5-1.pdf}
+
 \hypertarget{adjust-the-wordcloud-in-the-wordcloud-chunk-by-coloring-the-positive-and-negative-words-so-they-are-identifiable.}{%
 \subsection{3. Adjust the wordcloud in the ``wordcloud'' chunk by
 coloring the positive and negative words so they are
 identifiable.}\label{adjust-the-wordcloud-in-the-wordcloud-chunk-by-coloring-the-positive-and-negative-words-so-they-are-identifiable.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#load sentiment lexicons}
+\NormalTok{bing\_sent }\OtherTok{\textless{}{-}} \FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{\textquotesingle{}bing\textquotesingle{}}\NormalTok{)}
+\NormalTok{nrc\_sent }\OtherTok{\textless{}{-}} \FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{\textquotesingle{}nrc\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cloud }\OtherTok{\textless{}{-}}\NormalTok{ words }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{inner\_join}\NormalTok{(}\FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{"bing"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{inner\_join}\NormalTok{(}\FunctionTok{get\_sentiments}\NormalTok{(}\StringTok{"nrc"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{count}\NormalTok{(word, sentiment, }\AttributeTok{sort =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{acast}\NormalTok{(word }\SpecialCharTok{\textasciitilde{}}\NormalTok{ sentiment, }\AttributeTok{value.var =} \StringTok{"n"}\NormalTok{, }\AttributeTok{fill =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{comparison.cloud}\NormalTok{(}\AttributeTok{colors =} \FunctionTok{c}\NormalTok{(}\StringTok{"slateblue3"}\NormalTok{, }\StringTok{"goldenrod2"}\NormalTok{),}
+                   \AttributeTok{max.words =} \DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{HW04_SentimentAnalysisII_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cloud}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## NULL
+\end{verbatim}
 
 \hypertarget{lets-say-we-are-interested-in-the-most-prominent-entities-in-the-twitter-discussion.-which-are-the-top-10-most-tagged-accounts-in-the-data-set.-hint-the-explore_hashtags-chunk-is-a-good-starting-point.}{%
 \subsection{4. Let's say we are interested in the most prominent
@@ -364,6 +401,90 @@ entities in the Twitter discussion. Which are the top 10 most tagged
 accounts in the data set. Hint: the ``explore\_hashtags'' chunk is a
 good starting
 point.}\label{lets-say-we-are-interested-in-the-most-prominent-entities-in-the-twitter-discussion.-which-are-the-top-10-most-tagged-accounts-in-the-data-set.-hint-the-explore_hashtags-chunk-is-a-good-starting-point.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{corpus }\OtherTok{\textless{}{-}} \FunctionTok{corpus}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{Title) }\CommentTok{\#enter quanteda}
+\CommentTok{\#summary(corpus)}
+\CommentTok{\# text: tweet ID, Types: species words, Tokens: total words}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tagged\_accts }\OtherTok{\textless{}{-}} \FunctionTok{tokens}\NormalTok{(corpus, }\AttributeTok{remove\_punct =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+               \FunctionTok{tokens\_keep}\NormalTok{(}\AttributeTok{pattern =} \StringTok{"@*"}\NormalTok{)}
+
+\CommentTok{\# feature matrix {-} shows location of each features in the corpus aka located in the tweet : document feature matrix}
+\NormalTok{dfm\_tags}\OtherTok{\textless{}{-}} \FunctionTok{dfm}\NormalTok{(tagged\_accts)}
+
+\CommentTok{\# frequency of hashtags}
+\NormalTok{tstat\_freq }\OtherTok{\textless{}{-}} \FunctionTok{textstat\_frequency}\NormalTok{(dfm\_tags, }\AttributeTok{n =} \DecValTok{100}\NormalTok{)}
+\FunctionTok{head}\NormalTok{(tstat\_freq, }\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             feature frequency rank docfreq group
+## 1          @ipcc_ch       131    1     131   all
+## 2   @logicalindians        38    2      38   all
+## 3  @antonioguterres        16    3      16   all
+## 4          @nytimes        14    4      14   all
+## 5            @yahoo        14    4      14   all
+## 6            @potus        13    6      13   all
+## 7               @un        12    7      12   all
+## 8          @youtube        11    8      11   all
+## 9  @conversationedu        10    9      10   all
+## 10            @ipcc         9   10       9   all
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#tidytext gives us tools to convert to tidy from non{-}tidy formats}
+\NormalTok{tags\_tib }\OtherTok{\textless{}{-}} \FunctionTok{tidy}\NormalTok{(dfm\_tags)}
+
+\NormalTok{tags\_tib }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{count}\NormalTok{(term) }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{with}\NormalTok{(}\FunctionTok{wordcloud}\NormalTok{(term, n, }\AttributeTok{color =} \StringTok{"slateblue3"}\NormalTok{, }\AttributeTok{max.words =} \DecValTok{100}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{HW04_SentimentAnalysisII_files/figure-latex/user accounts-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{top\_tags }\OtherTok{\textless{}{-}}\NormalTok{ tags\_tib }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(term) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{rename}\NormalTok{(}\StringTok{"freq"} \OtherTok{=} \StringTok{"n()"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{top\_n}\NormalTok{(}\DecValTok{10}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{top10user\_plot }\OtherTok{\textless{}{-}}\NormalTok{ top\_tags }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{term =} \FunctionTok{fct\_relevel}\NormalTok{(term, }
+            \StringTok{"@ipcc\_ch"}\NormalTok{, }\StringTok{"@logicalindians"}\NormalTok{, }\StringTok{"@antonioguterres"}\NormalTok{, }\StringTok{"@nytimes"}\NormalTok{, }\StringTok{"@yahoo"}\NormalTok{, }\StringTok{"@potus"}\NormalTok{, }\StringTok{"@un"}\NormalTok{, }\StringTok{"@youtube"}\NormalTok{, }\StringTok{"@conversationedu"}\NormalTok{, }\StringTok{"@ipcc"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ freq, }\AttributeTok{y =}\NormalTok{ term)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{color =} \StringTok{"slateblue2"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Top 10 Tagged IPCC{-}related Accounts"}\NormalTok{,}
+       \AttributeTok{subtitle =} \StringTok{"April 01 {-} April 10, 2022"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"Frequency of Mentions"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Twitter Account"}\NormalTok{,}
+       \AttributeTok{caption =} \StringTok{"Data Source: Twitter"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }
+
+\NormalTok{top10user\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}
+\centering
+\includegraphics{HW04_SentimentAnalysisII_files/figure-latex/unnamed-chunk-9-1.pdf}
+\caption{Top 10 Twitter Accounts tagged in IPCC related tweets between
+April 1 - April 10, 2022}
+\end{figure}
 
 \hypertarget{the-twitter-data-download-comes-with-a-variable-called-sentiment-that-must-be-calculated-by-brandwatch.-use-your-own-method-to-assign-each-tweet-a-polarity-score-positive-negative-neutral-and-compare-your-classification-to-brandwatchs-hint-youll-need-to-revisit-the-raw_tweets-data-frame.}{%
 \subsection{5. The Twitter data download comes with a variable called
@@ -375,1669 +496,62 @@ frame).}\label{the-twitter-data-download-comes-with-a-variable-called-sentiment-
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# extract emojis from tweets }
-\NormalTok{all\_emojis\_in\_tweets }\OtherTok{\textless{}{-}}\NormalTok{ emojis }\SpecialCharTok{\%\textgreater{}\%} 
-  \CommentTok{\# for each emoji, find tweets containing this emoji       }
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{tweet =} \FunctionTok{map}\NormalTok{(code, }\SpecialCharTok{\textasciitilde{}}\FunctionTok{grep}\NormalTok{(.x, tweets\_clean}\SpecialCharTok{$}\NormalTok{text))) }\SpecialCharTok{\%\textgreater{}\%} 
+\CommentTok{\# Extract Date, Title, and Sentiment fields}
+\NormalTok{dat2}\OtherTok{\textless{}{-}}\NormalTok{ raw\_tweets[,}\FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{7}\NormalTok{, }\DecValTok{11}\NormalTok{)] }
+
+\NormalTok{tweet\_sen }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{element\_id =} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(dat2}\SpecialCharTok{$}\NormalTok{Title)),}
+                    \AttributeTok{date =} \FunctionTok{as.Date}\NormalTok{(dat2}\SpecialCharTok{$}\NormalTok{Date,}\StringTok{\textquotesingle{}\%m/\%d/\%y\textquotesingle{}}\NormalTok{),}
+                    \AttributeTok{text =}\NormalTok{ dat2}\SpecialCharTok{$}\NormalTok{Title,}
+                    \AttributeTok{brandwatch\_sentiment =}\NormalTok{ dat2}\SpecialCharTok{$}\NormalTok{Sentiment)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{bonus---emoji-frequency-exploration}{%
+\subsection{Bonus - Emoji Frequency
+Exploration}\label{bonus---emoji-frequency-exploration}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# extract emojis from tweets}
+\NormalTok{ipcc\_emojis }\OtherTok{\textless{}{-}}\NormalTok{ emojis }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# for each emoji, find tweets containing this emoji}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{tweet =} \FunctionTok{map}\NormalTok{(code, }\SpecialCharTok{\textasciitilde{}}\FunctionTok{grep}\NormalTok{(.x, tweets\_clean}\SpecialCharTok{$}\NormalTok{text))) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{unnest}\NormalTok{(tweet) }\SpecialCharTok{\%\textgreater{}\%}
-  \CommentTok{\# count the number of tweets in which each emoji was found           }
-  \FunctionTok{count}\NormalTok{(code, description) }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{emoji =} \FunctionTok{paste}\NormalTok{(code, description)) }
+  \CommentTok{\# count the number of tweets in which each emoji was found}
+  \FunctionTok{count}\NormalTok{(code, description) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{emoji =} \FunctionTok{paste}\NormalTok{(code, description))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{all\_emojis\_in\_tweets }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{top\_n}\NormalTok{(}\DecValTok{5}\NormalTok{, n) }\SpecialCharTok{\%\textgreater{}\%} 
-\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{geom\_col}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \FunctionTok{fct\_reorder}\NormalTok{(emoji, n), }\AttributeTok{y =}\NormalTok{ n, }\AttributeTok{fill =}\NormalTok{ n), }
-           \AttributeTok{colour =} \StringTok{"grey30"}\NormalTok{, }\AttributeTok{width =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{""}\NormalTok{, }\AttributeTok{y =} \StringTok{"Count"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Most used emojis"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{coord\_flip}\NormalTok{() }\SpecialCharTok{+}
-   \FunctionTok{scale\_fill\_gradientn}\NormalTok{(}\StringTok{"n"}\NormalTok{, }\AttributeTok{colors =} \FunctionTok{terrain.colors}\NormalTok{(}\DecValTok{10}\NormalTok{), }\AttributeTok{guide =} \StringTok{"none"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-                     \AttributeTok{breaks=}\FunctionTok{seq}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{10}\NormalTok{, }\DecValTok{2}\NormalTok{), }\AttributeTok{limits =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{10}\NormalTok{)) }\SpecialCharTok{+}
-  \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)) }
+\CommentTok{\# plot\_emoji \textless{}{-} ipcc\_emojis \%\textgreater{}\%}
+\CommentTok{\#   top\_n(5, n) \%\textgreater{}\%}
+\CommentTok{\#   ggplot() +}
+\CommentTok{\#   geom\_col(aes(x = fct\_reorder(emoji, n), y = n, fill = n),}
+\CommentTok{\#            color = "grey58", width = 1) +}
+\CommentTok{\#   scale\_fill\_gradientn("n", colors = brewer.pal(5, "Set2")) +}
+\CommentTok{\#   labs(x = "", y = "Count",}
+\CommentTok{\#        title = "Most Popular Emojis in IPCC tweets",}
+\CommentTok{\#        subtitle = "April 01 {-} April 10, 2022") +}
+\CommentTok{\#   coord\_flip()}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## Warning: Removed 5 rows containing missing values (position_stack).
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👉 backhand index pointing right' in 'mbcsToSbcs': dot
-## substituted for <89>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <9e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '➡ right arrow' in 'mbcsToSbcs': dot substituted for <a1>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <91>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '👇 backhand index pointing down' in 'mbcsToSbcs': dot
-## substituted for <87>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <e2>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <8f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '⏰ alarm clock' in 'mbcsToSbcs': dot substituted for <b0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <f0>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <9f>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <8e>
-\end{verbatim}
-
-\begin{verbatim}
-## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
-## conversion failure on '🎙 studio microphone' in 'mbcsToSbcs': dot substituted
-## for <99>
-\end{verbatim}
-
-\includegraphics{HW04_SentimentAnalysisII_files/figure-latex/unnamed-chunk-6-1.pdf}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# save emoji plot as png}
+\CommentTok{\# ggsave(file = "emojiplot.png", plot = plot\_emoji,}
+\CommentTok{\#   scale = 1, width = 6, height = 6,}
+\CommentTok{\#   units = "in", dpi = 300)}
+\end{Highlighting}
+\end{Shaded}
+
+\usepackage{graphics}
+ \begin{document}
+ \begin{frame}{}
+ \includegraphics[totalheight=60mm,clip=true,viewport=0 0 500 300]{emojiplot.png}
+ \end{frame}
+ \end{document}
 
 \end{document}

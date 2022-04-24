@@ -2,11 +2,16 @@
 title: "Topic 04 - Sentiment Analysis II"
 author: "Julia Parish"
 date: '2022-04-26'
-output: html_document
+output:
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+  - \setlength{\parindent}{1em}
+  - \usepackage{float}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 # Sentiment Analyis II
@@ -28,7 +33,8 @@ library(reshape2)
 library(here)
 library(rtweet)
 library(paletteer)
-
+library(kableExtra)
+library(sentimentr)
 ```
 
 ## Load IPPC tweet data & create plot of data
@@ -199,7 +205,16 @@ top10term_plot <- ggplot(data = words_top10, aes(x = date, y = freq)) +
 
 top10term_plot
 ```
+```{r}
+top10term_table = aggregate(words_top10$clean, 
+                            list(words_top10$date), paste, collapse=", ") %>% 
+  rename(Date = Group.1) %>% 
+  rename(top_words = x) %>% 
+  kable(col.names = c("Date", "Top 10 Words")) %>% 
+  kable_paper(full_width = TRUE)
 
+top10term_table
+```
 
 ## 3. Adjust the wordcloud in the “wordcloud” chunk by coloring the positive and negative words so they are identifiable.
 
@@ -279,38 +294,85 @@ top10user_plot
 # Extract Date, Title, and Sentiment fields
 dat2<- raw_tweets[,c(5, 7, 11)] 
 
-tweet_sen <- tibble(element_id = seq(1:length(dat2$Title)),
+tweet_sentiment <- tibble(element_id = seq(1:length(dat2$Title)),
                     date = as.Date(dat2$Date,'%m/%d/%y'),
                     text = dat2$Title,
                     brandwatch_sentiment = dat2$Sentiment)
 ```
 
-
-## Bonus - Emoji Frequency Exploration
-
 ```{r}
-# extract emojis from tweets 
-all_emojis_in_tweets <- emojis %>% 
-  # for each emoji, find tweets containing this emoji       
-  mutate(tweet = map(code, ~grep(.x, tweets_clean$text))) %>% 
-  unnest(tweet) %>%
-  # count the number of tweets in which each emoji was found           
-  count(code, description) %>% 
-  mutate(emoji = paste(code, description)) 
+# clean tweets
+tweet_sentiment$text <- gsub("http[^[:space:]]*", "",tweet_sentiment$text)
+
+tweet_sentiment$text <- str_to_lower(tweet_sentiment$text)
+
+tweet_sentiment$text <- gsub("@*", "", tweet_sentiment$text)
+
 ```
 
 ```{r}
-all_emojis_in_tweets %>% 
-  top_n(5, n) %>% 
-ggplot() +
-  geom_col(aes(x = fct_reorder(emoji, n), y = n, fill = n), 
-           color = "grey58", width = 1) +
-  scale_fill_gradientn("n", colors = brewer.pal(5, "Set2")) +
-  labs(x = "", y = "Count", 
-       title = "Most used emojis in IPCC tweets",
-       subtitle = "April 01 - April 10, 2022") +
-  coord_flip()
+tweet_sentiment$text <- sentimentr::replace_emoji(tweet_sentiment$text)
 
+tweet_sentiment$text <- sentimentr::replace_emoticon(tweet_sentiment$text)
+
+tweet_sentiment$text <- gsub("<*>", "", tweet_sentiment$text)
+
+tweet_sentiment$text <- str_remove_all(tweet_sentiment$text, "[:digit:]")
+
+# calculate tweet sentiment
+tweet_sen <- sentimentr::sentiment(tweet_sentiment$text)
+
+# calculate tweet emotion at sentence level
+tweet_emotion <- sentimentr::emotion(tweet_sentiment$text)
+```
+
+```{r}
+#join with sentence data
+sentiment <- inner_join(tweet_sentiment, tweet_sen, by = "element_id")
+```
+
+```{r}
+sentiment2 <- sentiment %>% 
+  mutate(sent_category = case_when(
+    sentiment < 0 ~ "negative",
+    sentiment > 0 ~ "positive",
+    sentiment == 0 ~ "neutral"))
+```
+
+
+## Bonus - Emoji Frequency Exploration
+
+```{r, eval=FALSE}
+# extract emojis from tweets
+ipcc_emojis <- emojis %>%
+  # for each emoji, find tweets containing this emoji
+  mutate(tweet = map(code, ~grep(.x, tweets_clean$text))) %>%
+  unnest(tweet) %>%
+  # count the number of tweets in which each emoji was found
+  count(code, description) %>%
+  mutate(emoji = paste(code, description))
+```
+
+```{r, eval=FALSE}
+# plot_emoji <- ipcc_emojis %>%
+#   top_n(5, n) %>%
+#   ggplot() +
+#   geom_col(aes(x = fct_reorder(emoji, n), y = n, fill = n),
+#            color = "grey58", width = 1) +
+#   scale_fill_gradientn("n", colors = brewer.pal(5, "Set2")) +
+#   labs(x = "", y = "Count",
+#        title = "Most Popular Emojis in IPCC tweets",
+#        subtitle = "April 01 - April 10, 2022") +
+#   coord_flip()
+
+```
+
+
+```{r, eval=FALSE}
+# save emoji plot as png
+# ggsave(file = "emojiplot.png", plot = plot_emoji,
+#   scale = 1, width = 6, height = 6,
+#   units = "in", dpi = 300)
 ```
 
 
