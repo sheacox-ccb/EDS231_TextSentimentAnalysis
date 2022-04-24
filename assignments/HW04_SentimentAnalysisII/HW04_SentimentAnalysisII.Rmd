@@ -5,9 +5,6 @@ date: '2022-04-26'
 output:
   pdf_document:
     latex_engine: xelatex
-header-includes:
-  - \setlength{\parindent}{1em}
-  - \usepackage{float}
 ---
 
 ```{r setup, include=FALSE}
@@ -39,13 +36,13 @@ library(sentimentr)
 
 ## Load IPPC tweet data & create plot of data
 ```{r ipcc tweet data}
-raw_tweets <- read.csv("https://raw.githubusercontent.com/MaRo406/EDS_231-text-sentiment/main/dat/IPCC_tweets_April1-10_sample.csv", header=TRUE)
+raw_tweets <- read.csv("data/IPCC_tweets_April1-10_sample.csv")
 
-dat<- raw_tweets[,c(5,7)] # Extract Date and Title fields
+dat<- raw_tweets[,c(4,6)] # Extract Date and Title fields
 
-tweets <- tibble(text = dat$Title,
-                  id = seq(1:length(dat$Title)),
-                 date = as.Date(dat$Date,'%m/%d/%y'))
+tweets <- tibble(id = seq(1:length(dat$Title)),
+                 date = as.Date(dat$Date,'%m/%d/%y'),
+                 text = dat$Title)
 
 head(tweets$text, n = 10)
 ```
@@ -192,11 +189,20 @@ words_top10 <- inner_join(words_freq, words, by = "clean") %>%
   rename("freq" = "n()")
 ```
 
-```{r}
+```{r, fig.cap="10 Most Common IPCC-related Tweet Terms"}
 top10term_plot <- ggplot(data = words_top10, aes(x = date, y = freq)) +
   geom_line(aes(color = clean)) +
+  geom_text(data=words_top10[34,], y = 325, label="Change", vjust=1, hjust=-0.01,
+            size = 2.5, color = "grey24") +
+  geom_text(data=words_top10[34,], y = 475, label="Report",vjust=1, hjust=-0.01,
+            size = 2.5, color = "grey24") +
+  geom_text(data=words_top10[34,], y = 600, label="Climate", hjust=-0.25,
+            size = 2.5, color = "grey24") +
+    geom_text(data=words_top10[34,], y = 650, label="IPCC", hjust=-0.25,
+            size = 2.5, color = "grey24") +
   labs(title = "10 Most Common IPCC-related Tweet Terms",
        subtitle = "April 01 - April 10, 2022",
+       caption = "Data source: Twitter",
        x = "Date",
        y = "Frequency",
        color = "Term") +
@@ -205,7 +211,7 @@ top10term_plot <- ggplot(data = words_top10, aes(x = date, y = freq)) +
 
 top10term_plot
 ```
-```{r}
+```{r, fig.cap="Table of Top 10 Words in IPCC-related tweets per day"}
 top10term_table = aggregate(words_top10$clean, 
                             list(words_top10$date), paste, collapse=", ") %>% 
   rename(Date = Group.1) %>% 
@@ -216,6 +222,10 @@ top10term_table = aggregate(words_top10$clean,
 top10term_table
 ```
 
+### Answer
+
+The Intergovernmental Panel on Climate Change (IPCC) held a virtual press conference to present a summary of the report `Climate Change 2022: Mitigation of Climate Change` on Monday, April 04, 2022. There was a large spike on the day of the press conference. More `Top 10` words in tweets occured on that day and on days preceding the press conference. The `Top 10` words found in tweets were very similar days before and after the conference, with `climate` and `change` being the most common. 
+
 ## 3. Adjust the wordcloud in the “wordcloud” chunk by coloring the positive and negative words so they are identifiable.
 
 ```{r}
@@ -224,7 +234,7 @@ bing_sent <- get_sentiments('bing')
 nrc_sent <- get_sentiments('nrc')
 ```
 
-```{r}
+```{r, fig.cap="Sentiment word cloud of IPCC-related Tweet Terms between April 01 - April 10, 2022. Positive sentiment terms are identified in the yellow hue, while negative terms are purple."}
 cloud <- words %>% inner_join(get_sentiments("bing")) %>%
   inner_join(get_sentiments("nrc")) %>%
   count(word, sentiment, sort = TRUE) %>%
@@ -243,7 +253,7 @@ corpus <- corpus(dat$Title) #enter quanteda
 # text: tweet ID, Types: species words, Tokens: total words
 ```
 
-```{r user accounts}
+```{r user accounts, fig.cap="Word cloud of IPCC-related Twitter accounts tagged between April 01 - April 10, 2022."}
 tagged_accts <- tokens(corpus, remove_punct = TRUE) %>% 
                tokens_keep(pattern = "@*")
 
@@ -292,7 +302,7 @@ top10user_plot
 
 ```{r}
 # Extract Date, Title, and Sentiment fields
-dat2<- raw_tweets[,c(5, 7, 11)] 
+dat2<- raw_tweets[,c(4, 6, 10)] 
 
 tweet_sentiment <- tibble(element_id = seq(1:length(dat2$Title)),
                     date = as.Date(dat2$Date,'%m/%d/%y'),
@@ -340,6 +350,47 @@ sentiment2 <- sentiment %>%
 ```
 
 
+```{r}
+sentiment3 = sentiment2 %>%   mutate(comparison = case_when(
+   brandwatch_sentiment == sent_category & brandwatch_sentiment == "positive" ~ "positive",
+   brandwatch_sentiment == sent_category & brandwatch_sentiment == "negative" ~ "negative",
+   brandwatch_sentiment == sent_category & brandwatch_sentiment == "neutral" ~ "neutral",
+   brandwatch_sentiment != sent_category ~ "no_match"))
+
+```
+
+
+```{r}
+sentiment4 = sentiment3 %>% 
+  mutate(comparison = fct_relevel(comparison, "positive", "neutral", "negative", "no_match")) %>% 
+  count(comparison)
+
+```
+
+```{r, message=FALSE, fig.cap="Compared two sentiment classification systems on IPCC related tweets posted between April 01 - April 10, 2022. Brandwatch sentiment and the package sentimentR were used for comparison. When the two sentiment classifcations were the same, they were designated by the polarity classification: positive, neutral, or negative. When the two classifications were not the same for a sentence, it was classified as: no_match."}
+sent_compare_plot <- sentiment4 %>% 
+  ggplot(aes(x = comparison, y = n)) +
+  geom_point(color = "slateblue3", size = 5) +
+  geom_text(aes(x = "positive", y = 180, label = "27"), stat = "unique",
+            size = 2.5, color = "grey24") +
+  geom_text(aes(x = "neutral", y = 1350, label = "1205"), stat = "unique",
+            size = 2.5, color = "grey24") +
+  geom_text(aes(x = "negative", y = 420, label = "290"), stat = "unique",
+            size = 2.5, color = "grey24") +
+  geom_text(aes(x = "no_match", y = 2990, label = "2842"), stat = "unique",
+            size = 2.5, color = "grey24") +
+  labs(title = "Sentiment Comparison of IPCC-related Tweets, April 2022",
+       subtitle = "Evaluated when Brandwatch and sentimentR matched (or not)",
+       caption = "Data Source: Brandwatch and sentimentR",
+       x = "Sentiment",
+       y = "Total Sentence Count") +
+  theme_minimal()
+
+sent_compare_plot
+```
+
+
+\newpage
 ## Bonus - Emoji Frequency Exploration
 
 ```{r, eval=FALSE}
@@ -354,17 +405,18 @@ ipcc_emojis <- emojis %>%
 ```
 
 ```{r, eval=FALSE}
-# plot_emoji <- ipcc_emojis %>%
-#   top_n(5, n) %>%
-#   ggplot() +
-#   geom_col(aes(x = fct_reorder(emoji, n), y = n, fill = n),
-#            color = "grey58", width = 1) +
-#   scale_fill_gradientn("n", colors = brewer.pal(5, "Set2")) +
-#   labs(x = "", y = "Count",
-#        title = "Most Popular Emojis in IPCC tweets",
-#        subtitle = "April 01 - April 10, 2022") +
-#   coord_flip()
+plot_emoji <- ipcc_emojis %>%
+  top_n(5, n) %>%
+  ggplot() +
+  geom_col(aes(x = fct_reorder(emoji, n), y = n, fill = n),
+           color = "grey58", width = 1) +
+  scale_fill_gradientn("n", colors = brewer.pal(5, "Set2")) +
+  labs(x = "", y = "Count",
+       title = "Most Popular Emojis in IPCC tweets",
+       subtitle = "April 01 - April 10, 2022") +
+  coord_flip()
 
+#plot_emoji
 ```
 
 
