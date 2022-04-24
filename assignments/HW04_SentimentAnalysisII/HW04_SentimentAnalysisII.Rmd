@@ -69,6 +69,7 @@ tweets_clean <- tweets %>%
 
 # remove mentions and website links
 tweets_clean$text_clean <- str_remove(tweets_clean$text_clean, "@[a-z,A-Z]*")
+
 tweets_clean$text_clean <- str_remove(tweets_clean$text_clean, "[:digit:]")
 
 tweets_clean$text_clean <- gsub("http.*","", tweets_clean$text_clean)
@@ -97,6 +98,67 @@ clean_tokens <- gsub("’s", '', clean_tokens)
 # remove unnecessary twitter formats
 clean_tokens <- str_remove_all(clean_tokens, "t.co")
 
+# stem the token "ipcc" as there are some plural instances
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "ipcc[a-z, A-Z]*", 
+                                replacement = "ipcc")
+
+
+# stem the token "fuel" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "fuel[a-z, A-Z]*", 
+                                replacement = "fuel")
+
+# stem the token "biofuel" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "biofuel[a-z, A-Z]*", 
+                                replacement = "biofuel")
+
+# stem the token "headline" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "headline[a-z, A-Z]*", 
+                                replacement = "headline")
+
+# stem the token "regulation" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "regulation[a-z, A-Z]*", 
+                                replacement = "regulation")
+
+# stem the token "follower" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "follower[a-z, A-Z]*", 
+                                replacement = "follower")
+
+# stem the token "suggestion" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "suggestion[a-z, A-Z]*", 
+                                replacement = "suggestion")
+
+# stem the token "solution" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "solution[a-z, A-Z]*", 
+                                replacement = "solution")
+
+# stem the token "reduction" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "reduction[a-z, A-Z]*", 
+                                replacement = "reduction")
+
+# stem the token "risk" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "risk[a-z, A-Z]*", 
+                                replacement = "risk")
+
+# stem the token "scenario" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "scenario[a-z, A-Z]*", 
+                                replacement = "scenario")
+
+# stem the token "submission" as it may occur in the plural form
+clean_tokens <- str_replace_all(string = clean_tokens,
+                                pattern = "submission[a-z, A-Z]*", 
+                                replacement = "submission")
+
 words$clean <- clean_tokens
 
 # remove the empty strings
@@ -105,23 +167,123 @@ tib <-subset(words, clean != "")
 #reassign
 words <- tib
 
+head(words)
 ```
-
-```{r}
-ipcc_tweets_clean <- tweets_clean %>%
-  dplyr::select(text_clean) %>%
-  unnest_tokens(word, text_clean) %>%
-  anti_join(stop_words, by = "word")
-```
-
 
 ## 2. Compare the ten most common terms in the tweets per day. Do you notice anything interesting?
 
+```{r}
+words_freq <- words %>% 
+  group_by(clean) %>% 
+  summarise(n()) %>% 
+  top_n(10) %>% 
+  rename("freq" = "n()") %>% 
+  select(clean)
+
+words_top10 <- inner_join(words_freq, words, by = "clean") %>% 
+  group_by(date, clean) %>% 
+  summarize(n()) %>% 
+  rename("freq" = "n()")
+```
+
+```{r}
+top10term_plot <- ggplot(data = words_top10, aes(x = date, y = freq)) +
+  geom_line(aes(color = clean)) +
+  labs(title = "10 Most Common IPCC-related Tweet Terms",
+       subtitle = "April 01 - April 10, 2022",
+       x = "Date",
+       y = "Frequency",
+       color = "Term") +
+  scale_color_paletteer_d("rcartocolor::Safe") +
+  theme_minimal() 
+
+top10term_plot
+```
+
+
 ## 3. Adjust the wordcloud in the “wordcloud” chunk by coloring the positive and negative words so they are identifiable.
+
+```{r}
+#load sentiment lexicons
+bing_sent <- get_sentiments('bing')
+nrc_sent <- get_sentiments('nrc')
+```
+
+```{r}
+cloud <- words %>% inner_join(get_sentiments("bing")) %>%
+  inner_join(get_sentiments("nrc")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("slateblue3", "goldenrod2"),
+                   max.words = 100)
+
+cloud
+```
 
 ## 4. Let’s say we are interested in the most prominent entities in the Twitter discussion. Which are the top 10 most tagged accounts in the data set. Hint: the “explore_hashtags” chunk is a good starting point.
 
+```{r create_corpus}
+corpus <- corpus(dat$Title) #enter quanteda
+#summary(corpus)
+# text: tweet ID, Types: species words, Tokens: total words
+```
+
+```{r user accounts}
+tagged_accts <- tokens(corpus, remove_punct = TRUE) %>% 
+               tokens_keep(pattern = "@*")
+
+# feature matrix - shows location of each features in the corpus aka located in the tweet : document feature matrix
+dfm_tags<- dfm(tagged_accts)
+
+# frequency of hashtags
+tstat_freq <- textstat_frequency(dfm_tags, n = 100)
+head(tstat_freq, 10)
+
+#tidytext gives us tools to convert to tidy from non-tidy formats
+tags_tib <- tidy(dfm_tags)
+
+tags_tib %>%
+   count(term) %>%
+   with(wordcloud(term, n, color = "slateblue3", max.words = 100))
+```
+
+```{r}
+top_tags <- tags_tib %>% 
+  group_by(term) %>% 
+  summarize(n()) %>% 
+  rename("freq" = "n()") %>% 
+  top_n(10) 
+
+```
+
+```{r, fig.cap="Top 10 Twitter Accounts tagged in IPCC related tweets between April 1 - April 10, 2022"}
+top10user_plot <- top_tags %>% 
+  mutate(term = fct_relevel(term, 
+            "@ipcc_ch", "@logicalindians", "@antonioguterres", "@nytimes", "@yahoo", "@potus", "@un", "@youtube", "@conversationedu", "@ipcc")) %>%
+  ggplot(aes(x = freq, y = term)) +
+  geom_point(color = "slateblue2") +
+  labs(title = "Top 10 Tagged IPCC-related Accounts",
+       subtitle = "April 01 - April 10, 2022",
+       x = "Frequency of Mentions",
+       y = "Twitter Account",
+       caption = "Data Source: Twitter") +
+  theme_minimal() 
+
+top10user_plot
+```
+
+
 ## 5. The Twitter data download comes with a variable called “Sentiment” that must be calculated by Brandwatch. Use your own method to assign each tweet a polarity score (Positive, Negative, Neutral) and compare your classification to Brandwatch’s (hint: you’ll need to revisit the “raw_tweets” data frame).
+
+```{r}
+# Extract Date, Title, and Sentiment fields
+dat2<- raw_tweets[,c(5, 7, 11)] 
+
+tweet_sen <- tibble(element_id = seq(1:length(dat2$Title)),
+                    date = as.Date(dat2$Date,'%m/%d/%y'),
+                    text = dat2$Title,
+                    brandwatch_sentiment = dat2$Sentiment)
+```
 
 
 ## Bonus - Emoji Frequency Exploration
