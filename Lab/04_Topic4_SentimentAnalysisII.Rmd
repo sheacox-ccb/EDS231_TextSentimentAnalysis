@@ -20,13 +20,14 @@ library(tidytext)
 library(lubridate)
 library(wordcloud) #visualization of common words in the data set
 library(reshape2)
+library(here)
 ```
 
 Last week we used the tidytext approach to sentiment analysis for Nexis Uni .pdf data on coverage of the recent IPCC report. This week we will look at the conversation on Twitter about the same report. We'll start with the familiar tidy approach, and then introduce the quanteda package later.
 
 ```{r tweet_data}
 
-raw_tweets <- read.csv("https://raw.githubusercontent.com/MaRo406/EDS_231-text-sentiment/main/dat/IPCC_tweets_April1-10_sample.csv", header=TRUE)
+raw_tweets <- read.csv("data/IPCC_tweets_April1-10_sample.csv")
 
 dat<- raw_tweets[,c(5,7)] # Extract Date and Title fields
 
