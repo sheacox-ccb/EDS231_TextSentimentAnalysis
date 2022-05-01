@@ -18,6 +18,8 @@ The goal of EDS 231 Text and Sentiment Analysis is to expose students to a range
 | jsonlite   | ggplot2    | tidytext       | 
 | tidyverse  | tidyr      | LexisNexisTools|
 | sentimentr | readr      | pdftools       |
-|            |            |                |
-|            |            |                |
-
+| quanteda   | lubridate  | wordcloud      |
+| reshape2   | here       | rtweet         |
+| paletteer  | kableExtra | sentimentr     |
+|     |         |           |
+|     |         |           |
