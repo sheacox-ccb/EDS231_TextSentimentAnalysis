@@ -1,0 +1,282 @@
+---
+title: "Topic 05 Word Reference"
+author: "Julia Parish"
+date: '2022-05-03'
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+output: 
+  pdf_document:
+    extra_dependencies: ["float"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.pos='!H')
+```
+
+# Word Reference
+
+This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from articles written by the Environmental Protection Agency.
+
+Original assignment instructions can be found [here](https://maro406.github.io/EDS_231-text-sentiment/topic_5.html)
+
+### Load Libraries
+
+```{r packages}
+library(tidyr) #text analysis in R
+library(pdftools)
+library(lubridate) #working with date data
+library(tidyverse)
+library(tidytext)
+library(readr)
+library(quanteda)
+library(readtext) #quanteda subpackage for reading pdf
+library(quanteda.textstats)
+library(quanteda.textplots)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(quanteda.textplots)
+library(widyr)# pairwise correlations
+library(igraph) #network plots
+library(ggraph)
+library(here)
+```
+
+```{r}
+setwd("/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW05_WordReference")
+```
+
+# Assignment Set Up 
+
+## Read in data files, clean the data, create objects, and conduct frequency statistics
+
+Load Data Files
+```{r pdf_import}
+
+files <- list.files(path = "data/", pattern = "pdf$", full.names = T)
+
+ej_reports <- lapply(files, pdf_text)
+
+ej_pdf <- readtext(file = "data/*.pdf", docvarsfrom = "filenames", 
+                    docvarnames = c("type", "subj", "year"),
+                    sep = "_")
+
+#create an initial corpus containing the EPA EJ data
+epa_corp <- corpus(x = ej_pdf, text_field = "text" )
+summary(epa_corp)
+```
+
+Add Stop Words
+```{r}
+# add context-specific stop words to stop word lexicon
+more_stops <-c("2015","2016", "2017", "2018", "2019", "2020", "www.epa.gov", "https")
+
+add_stops<- tibble(word = c(stop_words$word, more_stops)) 
+
+stop_vec <- as_vector(add_stops)
+```
+
+Create different data objects for the subsequent analyses
+```{r tidy}
+#convert to tidy format and apply my stop words
+raw_text <- tidy(epa_corp)
+
+#Distribution of most frequent words across documents
+raw_words <- raw_text %>%
+  mutate(year = as.factor(year)) %>%
+  unnest_tokens(word, text) %>%
+  anti_join(add_stops, by = 'word') %>%
+  count(year, word, sort = TRUE)
+```
+
+```{r}
+#number of total words by document  
+total_words <- raw_words %>%
+  group_by(year) %>%
+  summarize(total = sum(n))
+
+report_words <- left_join(raw_words, total_words)
+
+par_tokens <- unnest_tokens(raw_text, output = paragraphs, input = text, token = "paragraphs")
+
+par_tokens <- par_tokens %>%
+ mutate(par_id = 1:n())
+
+par_words <- unnest_tokens(par_tokens, output = word, input = paragraphs, token = "words")
+```
+
+```{r quanteda_init}
+tokens <- tokens(epa_corp, remove_punct = TRUE)
+toks1<- tokens_select(tokens, min_nchar = 3)
+toks1 <- tokens_tolower(toks1)
+toks1 <- tokens_remove(toks1, pattern = (stop_vec))
+dfm <- dfm(toks1)
+```
+
+Conduct Frequency Statistics
+```{r}
+#first the basic frequency statistics
+tstat_freq <- textstat_frequency(dfm, n = 5, groups = year)
+
+head(tstat_freq, 10) %>% 
+  knitr::kable(caption = "Subset of Top 10 Words")
+```
+
+\newpage
+
+# Assignment Questions
+
+## 1.  What are the most frequent trigrams in the dataset? How does this compare to the most frequent bigrams? Which n-gram seems more informative here, and why?
+
+```{r bigrams}
+# bigrams
+toks2 <- tokens_ngrams(toks1, n=2)
+dfm2 <- dfm(toks2) # document feature matrix
+dfm2 <- dfm_remove(dfm2, pattern = c(stop_vec))
+
+freq_words2 <- textstat_frequency(dfm2, n=20)
+freq_words2$token <- rep("bigram", 20)
+
+bigrams <- freq_words2 %>%
+  knitr::kable(caption = "Bigrams")
+
+bigrams
+```
+
+```{r trigrams}
+# trigrams
+toks3 <- tokens_ngrams(toks1, n=3)
+dfm3 <- dfm(toks3) # document feature matrix
+dfm3 <- dfm_remove(dfm3, pattern = c(stop_vec))
+
+freq_words3 <- textstat_frequency(dfm3, n=20)
+freq_words3$token <- rep("trigram", 20)
+
+trigrams <- freq_words3 %>%
+  knitr::kable(caption = "Trigrams")
+
+trigrams
+```
+
+The five most frequent bigrams are `r freq_words2[1]$feature`, `r freq_words2[2]$feature`, `r freq_words2[3]$feature`, `r freq_words2[4]$feature`, and `r freq_words2[5]$feature`. 
+
+The five most frequent trigrams are `r freq_words3[1]$feature`, `r freq_words3[2]$feature`, `r freq_words3[3]$feature`, `r freq_words3[4]$feature`, and `r freq_words3[5]$feature`. 
+
+The words `environmental`, `justice`, `water`, `progress`, and `epa` appear frequently in both the bigrams and trigrams lists. The `bigrams` list provides more detailed, diverse words relevant to EPA policy. The `trigrams` list focuses more on progress report tokens than policy terms.    
+
+## 2.  Choose a new focal term to replace "justice" and recreate the correlation table and network (see corr_paragraphs and corr_network chunks). Explore some of the plotting parameters in the cor_network chunk to see if you can improve the clarity or amount of information your plot conveys. Make sure to use a different color for the ties!
+
+```{r corr_paragraphs}
+# pairwise correlation
+
+word_cors <- par_words %>% 
+  add_count(par_id) %>% 
+  filter(n >= 50) %>% 
+  select(-n) %>%
+  pairwise_cor(word, par_id, sort = TRUE)
+```
+
+```{r filter term}
+# filter for the term 'indigenous'
+indigenous_cors <- word_cors %>% 
+  filter(item1 == "indigenous") %>% 
+  mutate(n = 1:n())
+```
+
+```{r corr_network}
+# create correlation network
+
+cor_network <- indigenous_cors  %>%
+  filter(n <= 35) %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  geom_edge_link(aes(edge_alpha = correlation, edge_width = correlation), edge_colour = "lightslateblue") +
+  geom_node_point(color = "grey35", size = 3.5) +
+  geom_node_text(aes(label = name), repel = TRUE, 
+                 point.padding = unit(0.2, "lines")) +
+  theme_void()
+
+cor_network
+```
+
+## 3.  Write a function that allows you to conduct a keyness analysis to compare two individual EPA reports (hint: that means target and reference need to both be individual reports). Run the function on 3 pairs of reports, generating 3 keyness plots.
+
+Create the function
+```{r function}
+keyness_function <- function(reference_report, target_report) { 
+  files <- list.files(path = "data/", pattern = "pdf$", full.names = T)
+  ej_reports <- lapply(files, pdf_text)
+  ej_pdf <- readtext(file = "data/*.pdf", docvarsfrom = "filenames", 
+                    docvarnames = c("type", "subj", "year"),
+                    sep = "_")
+  epa_corp <- corpus(x = ej_pdf, text_field = "text")
+  tokens <- tokens(epa_corp, remove_punct = TRUE)
+  toks1<- tokens_select(tokens, min_nchar = 3)
+  toks1 <- tokens_tolower(toks1)
+  toks1 <- tokens_remove(toks1, pattern = (stop_vec))
+  dfm <- dfm(toks1)
+  
+  keyness_function_plot <- dfm %>% 
+    dfm_subset(year %in% c(reference_report, target_report)) %>% 
+    textstat_keyness(target = paste0("EPA_EJ_", target_report, ".pdf")) %>% 
+    textplot_keyness()
+  keyness_function_plot
+  }
+
+```
+
+Use function to analyze EPA Reports 2015 & 2016
+```{r, fig.cap="Analysis of most frequent terms in the reference file, EPA FY2015, and target file, EPA FY2016.", fig.height=8, fig.width=12}
+keyness_function(reference_report = 2015, target_report = 2016)
+```
+
+Analyze EPA Reports 2016 & 2017
+```{r, fig.cap="Analysis of most frequent terms in the reference file, EPA FY2016, and target file, EPA FY2017.", fig.height=8, fig.width=12}
+keyness_function(reference_report = 2016, target_report = 2017)
+```
+
+Analyze EPA Reports 2017 & 2018
+```{r, fig.cap="Analysis of msot frequent terms in the reference file, EPA FY2017, and target file, EPA FY2018.", fig.height=8, fig.width=12}
+keyness_function(reference_report = 2017, target_report = 2018)
+```
+
+\newpage 
+
+## 4.  Select a word or multi-word term of interest and identify words related to it using windowing and keyness comparison. To do this you will create two objects: one containing all words occurring within a 10-word window of your term of interest, and the second object containing all other words. Then run a keyness comparison on these objects. Which one is the target, and which the reference? [Hint](https://tutorials.quanteda.io/advanced-operations/target-word-collocations/)
+
+```{r }
+tokens <- tokens(epa_corp, remove_punct = TRUE)
+toks1<- tokens_select(tokens, min_nchar = 3)
+toks1 <- tokens_tolower(toks1)
+toks1 <- tokens_remove(toks1, pattern = (stop_vec))
+dfm <- dfm(toks1)
+
+```
+
+```{r}
+toks_inside <- tokens_keep(toks1, pattern = "indigenous", window = 10)
+
+# remove the keywords
+toks_inside <- tokens_remove(toks_inside, pattern = "indigenous") 
+
+toks_outside <- tokens_remove(toks1, pattern = "indigenous", window = 10)
+```
+
+```{r}
+dfmat_inside <- dfm(toks_inside)
+dfmat_outside <- dfm(toks_outside)
+
+tstat_key_inside <- textstat_keyness(rbind(dfmat_inside, dfmat_outside),
+                                     target = seq_len(ndoc(dfmat_inside)))
+
+head(tstat_key_inside, 10)
+```
+
+
+
+
+
+
+
+
