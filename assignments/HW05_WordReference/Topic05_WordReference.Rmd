@@ -41,6 +41,7 @@ library(widyr)# pairwise correlations
 library(igraph) #network plots
 library(ggraph)
 library(here)
+library(kableExtra)
 ```
 
 ```{r}
@@ -120,7 +121,8 @@ Conduct Frequency Statistics
 tstat_freq <- textstat_frequency(dfm, n = 5, groups = year)
 
 head(tstat_freq, 10) %>% 
-  knitr::kable(caption = "Subset of Top 10 Words")
+  knitr::kable(caption = "Subset of Top 10 Words") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 \newpage
@@ -139,7 +141,8 @@ freq_words2 <- textstat_frequency(dfm2, n=20)
 freq_words2$token <- rep("bigram", 20)
 
 bigrams <- freq_words2 %>%
-  knitr::kable(caption = "Bigrams")
+  knitr::kable(caption = "Bigrams") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 bigrams
 ```
@@ -154,7 +157,8 @@ freq_words3 <- textstat_frequency(dfm3, n=20)
 freq_words3$token <- rep("trigram", 20)
 
 trigrams <- freq_words3 %>%
-  knitr::kable(caption = "Trigrams")
+  knitr::kable(caption = "Trigrams") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 trigrams
 ```
@@ -241,7 +245,6 @@ Analyze EPA Reports 2017 & 2018
 keyness_function(reference_report = 2017, target_report = 2018)
 ```
 
-\newpage 
 
 ## 4.  Select a word or multi-word term of interest and identify words related to it using windowing and keyness comparison. To do this you will create two objects: one containing all words occurring within a 10-word window of your term of interest, and the second object containing all other words. Then run a keyness comparison on these objects. Which one is the target, and which the reference? [Hint](https://tutorials.quanteda.io/advanced-operations/target-word-collocations/)
 
@@ -255,11 +258,13 @@ dfm <- dfm(toks1)
 ```
 
 ```{r}
+# select keyword and keep tokens within 10 words of keyword
 toks_inside <- tokens_keep(toks1, pattern = "indigenous", window = 10)
 
-# remove the keywords
+# remove the keyword from tokens previously created
 toks_inside <- tokens_remove(toks_inside, pattern = "indigenous") 
 
+# create object of all non-keyword tokens
 toks_outside <- tokens_remove(toks1, pattern = "indigenous", window = 10)
 ```
 
@@ -267,15 +272,36 @@ toks_outside <- tokens_remove(toks1, pattern = "indigenous", window = 10)
 dfmat_inside <- dfm(toks_inside)
 dfmat_outside <- dfm(toks_outside)
 
-tstat_key_inside <- textstat_keyness(rbind(dfmat_inside, dfmat_outside),
-                                     target = seq_len(ndoc(dfmat_inside)))
+# chi measure (default)
+tstat_chi_inside <- textstat_keyness(rbind(dfmat_inside, dfmat_outside),
+                                     target = seq_len(ndoc(dfmat_inside))) 
 
-head(tstat_key_inside, 10)
+
+# likelihood measure 
+tstat_lr_inside <- textstat_keyness(rbind(dfmat_inside, dfmat_outside),
+                                     target = seq_len(ndoc(dfmat_inside)),
+                                     measure = "lr",
+                                     correction = "williams") 
+```
+
+```{r}
+head_tstat_chi_table <- tstat_chi_inside[1:15, ] %>%
+  knitr::kable(caption = "Chi-Squared Keyness Comparison Test of EPA EJ Term 'Indigenous'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+head_tstat_chi_table
+```
+
+```{r}
+head_tstat_lr_table <- tstat_lr_inside[1:15, ] %>%
+  knitr::kable(caption = "Likelihood Ratio Keyness Comparison of EPA EJ Term 'Indigenous'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+head_tstat_lr_table
 ```
 
 
-
-
+The `target` document index is `toks_inside` which is tokens within a 10 token window of the keyword, `indigenous`. The `reference` document index is all other tokens in the EPA EJ documents. 
 
 
 
