@@ -39,6 +39,7 @@ Now we'll build and clean the corpus
 epa_corp <- corpus(x = comments_df, text_field = "text")
 epa_corp.stats <- summary(epa_corp)
 head(epa_corp.stats, n = 25)
+
 toks <- tokens(epa_corp, remove_punct = TRUE, remove_numbers = TRUE)
 #I added some project-specific stop words here
 add_stops <- c(stopwords("en"),"environmental", "justice", "ej", "epa", "public", "comment")
@@ -65,17 +66,28 @@ dfm <- dfm[sel_idx, ]
 
 We somehow have to come up with a value for k,the number of latent topics present in the data. How do we do this? There are multiple methods. Let's use what we already know about the data to inform a prediction. The EPA has 9 priority areas: Rulemaking, Permitting, Compliance and Enforcement, Science, States and Local Governments, Federal Agencies, Community-based Work, Tribes and Indigenous People, National Measures. Maybe the comments correspond to those areas?
 
+- need to tell LDA model how many topics will be in the data, if you don't know may pick a random number
 ```{r LDA_modeling}
+# select topic areas and assign to 'k'
 k <- 9 
 
+# run LDA function, telling it how many topics to look for (9), est. 2 matrices
 topicModel_k9 <- LDA(dfm, k, method="Gibbs", control=list(iter = 500, verbose = 25))
 #nTerms(dfm_comm) 
 
+# LDA estimated topics, saved result
 tmResult <- posterior(topicModel_k9)
-attributes(tmResult)
+attributes(tmResult) # terms, topics
 #nTerms(dfm_comm)   
+
+# beta matrix
 beta <- tmResult$terms   # get beta from results
-dim(beta)                # K distributions over nTerms(DTM) terms# lengthOfVocab
+
+# each word associated with the 9 topics
+dim(beta)                # K distributions over nTerms(DTM) terms# lengthOfVocab, 
+
+# up to researcher to decide what topic is, what is the idea that has these words used most frequently
+# dependent on assumption that there were 9 topics
 terms(topicModel_k9, 10)
 ```
 
@@ -98,18 +110,23 @@ Some of those topics seem related to the cross-cutting and additional topics ide
 So we could guess that there might be a 16 topics (9 priority + 7 additional). Or we could calculate some metrics from the data.
 
 ```{r LDA_again}
-#
+# up to this point, the documents have been a bag of words, the eval metrics account for where the words occur in relationship to one another
+
 result <- FindTopicsNumber(
   dfm,
   topics = seq(from = 2, to = 20, by = 1),
-  metrics = c("CaoJuan2009",  "Deveaud2014"),
+  metrics = c("CaoJuan2009",  "Deveaud2014"), 
   method = "Gibbs",
   control = list(seed = 77),
   verbose = TRUE
 )
 
+# plot model results
 FindTopicsNumber_plot(result)
+```
 
+
+```{r LDA_again 7}
 k <- 7
 
 topicModel_k7 <- LDA(dfm, k, method="Gibbs", control=list(iter = 500, verbose = 25))
@@ -119,8 +136,8 @@ terms(topicModel_k7, 10)
 theta <- tmResult$topics
 beta <- tmResult$terms
 vocab <- (colnames(beta))
-
 ```
+
 
 There are multiple proposed methods for how to measure the best k value. You can [go down the rabbit hole here](#multiple%20proposed%20methods%20for%20measuring%20the%20best%20k%20value.%20You%20can)
 
@@ -134,6 +151,7 @@ top_terms <- comment_topics %>%
   ungroup() %>%
   arrange(topic, -beta)
 
+# each term with its beta value, words that are most prevalent in comment
 top_terms
 ```
 
@@ -151,6 +169,7 @@ top_terms %>%
 Let's assign names to the topics so we know what we are working with. We can name them by their top terms
 
 ```{r topic_names}
+# name topic based on common words in topic
 top5termsPerTopic <- terms(topicModel_k7, 5)
 topicNames <- apply(top5termsPerTopic, 2, paste, collapse=" ")
 ```
@@ -166,6 +185,9 @@ N <- length(exampleIds)
 topicProportionExamples <- theta[exampleIds,]
 colnames(topicProportionExamples) <- topicNames
 vizDataFrame <- melt(cbind(data.frame(topicProportionExamples), document=factor(1:N)), variable.name = "topic", id.vars = "document")  
+
+
+# distributions of topics over the 3 documents
 ggplot(data = vizDataFrame, aes(topic, value, fill = document), ylab = "proportion") +
   geom_bar(stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  
@@ -178,6 +200,10 @@ Here's a neat JSON-based model visualizer
 ```{r LDAvis}
 library(LDAvis)
 library("tsne")
+```
+
+
+```{r LDAvis}
 svd_tsne <- function(x) tsne(svd(x)$u)
 json <- createJSON(
   phi = tmResult$terms, 
@@ -189,8 +215,8 @@ json <- createJSON(
   plot.opts = list(xlab="", ylab="")
 )
 serVis(json)
-
 ```
+
 
 ### Assignment:
 
