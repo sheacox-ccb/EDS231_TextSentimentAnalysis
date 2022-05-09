@@ -39,6 +39,7 @@ ipcc_data <- list.files(pattern = "Nexis_IPCC_Results.docx", path = data,
 dat <- lnt_read(ipcc_data) #Object of class 'LNT output'
 
 ```
+
 ```{r}
 meta_df <- dat@meta
 articles_df <- dat@articles

@@ -130,13 +130,17 @@ FindTopicsNumber_plot(result)
 k <- 7
 
 topicModel_k7 <- LDA(dfm, k, method="Gibbs", control=list(iter = 500, verbose = 25))
+```
 
+
+```{r LDA_again 7}
 tmResult <- posterior(topicModel_k7)
 terms(topicModel_k7, 10)
 theta <- tmResult$topics
 beta <- tmResult$terms
 vocab <- (colnames(beta))
 ```
+
 
 
 There are multiple proposed methods for how to measure the best k value. You can [go down the rabbit hole here](#multiple%20proposed%20methods%20for%20measuring%20the%20best%20k%20value.%20You%20can)
