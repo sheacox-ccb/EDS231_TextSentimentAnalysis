@@ -34,14 +34,15 @@ librarian::shelf(here,
                  kableExtra,
                  ldatuning,
                  LDAvis,
+                 LexisNexisTools,
                  lubridate,
                  pdftools,
                  quanteda,
-                 quanteda.texplots,
+                 quanteda.textplots,
                  quanteda.textstats,
                  readr,
                  reshape2,
-                 sentiment,
+                 sentimentr,
                  tidyr,
                  tidytext,
                  tidyverse,
@@ -55,4 +56,29 @@ librarian::shelf(here,
 Include  justification for the selection: theory, FindTopicsNumber() optimization metrics, interpretability, LDAvis
 
 
+```{r}
+folder <- "/Users/julia/Documents/_MEDS/04_spring/EDS231_TextSentiment/repository/EDS231_TextSentimentAnalysis/assignments/HW06_TopicAnalysis/data"
+
+farm_data <- list.files(pattern = ".DOCX", path = folder, 
+                        full.names = TRUE, recursive = TRUE, ignore.case = TRUE)2
+
+# lnt_read = read in a LexisNexis file
+data <- lnt_read(farm_data) 
+```
+
+```{r}
+meta_df <- data@meta
+articles_df <- data@articles
+paragraphs_df <- data@paragraphs
+```
+
+```{r}
+
+headline_df<- data_frame(element_id = seq(1:length(meta_df$Headline)), Date = meta_df$Date, 
+                  Headline = meta_df$Headline)
+
+paragraphs_df <- data_frame(element_id = paragraphs_df$Art_ID, Text  = paragraphs_df$Paragraph)
+
+ipm_data <- inner_join(headline_df, paragraphs_df, by = "element_id")
+```
 
