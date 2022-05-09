@@ -1,0 +1,58 @@
+---
+title: "Topic 06 - Topic Analysis"
+author: "Julia Parish"
+date: '2022-05-10'
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+output: 
+  pdf_document:
+    extra_dependencies: ["float"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.pos='!H')
+```
+
+# Topic Analysis
+
+This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from  ...
+
+Original assignment instructions can be found [here](https://maro406.github.io/EDS_231-text-sentiment/topic_6.html)
+
+### Load Libraries
+
+```{r packages}
+#install packages as necessary, then load libraries
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(here,
+                 igraph,
+                 kableExtra,
+                 ldatuning,
+                 LDAvis,
+                 lubridate,
+                 pdftools,
+                 quanteda,
+                 quanteda.texplots,
+                 quanteda.textstats,
+                 readr,
+                 reshape2,
+                 sentiment,
+                 tidyr,
+                 tidytext,
+                 tidyverse,
+                 tm,
+                 topicmodels,
+                 tsne)
+```
+
+# Run three Topic Analysis models and select the overall best value for k (the number of topics).
+
+Include  justification for the selection: theory, FindTopicsNumber() optimization metrics, interpretability, LDAvis
+
+
+

@@ -21,7 +21,6 @@ library(lubridate) #working with date data
 library(pdftools) #read in pdfs
 library(tidyverse)
 library(tidytext)
-library(here)
 library(LexisNexisTools) #Nexis Uni data wrangling
 library(sentimentr)
 library(readr)
@@ -313,8 +312,4 @@ It seems as trust goes down, the sentiments of fear, anger, and distrust increas
 
 # References
 
-Froehlich HE, Gentry RR, Rust MB,
-Grimm D, Halpern BS. (2017). Public Perceptions of
-Aquaculture: Evaluating Spatiotemporal Patterns of
-Sentiment around the World. PLoS ONE 12(1):
-e0169281. doi:10.1371/journal.pone.0169281
+Froehlich HE, Gentry RR, Rust MB, Grimm D, Halpern BS. (2017). Public Perceptions of Aquaculture: Evaluating Spatiotemporal Patterns of Sentiment around the World. PLoS ONE 12(1): e0169281. doi:10.1371/journal.pone.0169281
