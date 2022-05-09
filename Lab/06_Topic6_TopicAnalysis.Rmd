@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r packages}
 library(here)
 library(pdftools)
@@ -20,6 +19,7 @@ library(ldatuning)
 library(tidyverse)
 library(tidytext)
 library(reshape2)
+library(LexisNexisTools)
 
 ```
 
