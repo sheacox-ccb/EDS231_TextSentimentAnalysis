@@ -1,0 +1,41 @@
+---
+title: "Topic 07 - Word Embeddings"
+author: "Julia Parish"
+date: '2022-05-11'
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+output: 
+  pdf_document:
+    extra_dependencies: ["float"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.pos='!H')
+```
+
+# Word Embedding
+
+This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from: Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation.
+
+Original assignment instructions can be found [here](https://maro406.github.io/EDS_231-text-sentiment/topic_7.html)
+
+### Load Libraries
+
+```{r}
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(broom,
+                 here,
+                 irlba,
+                 kableExtra,
+                 textdata,
+                 tidytext,
+                 tidyverse,
+                 widyr)
+  
+```
+
