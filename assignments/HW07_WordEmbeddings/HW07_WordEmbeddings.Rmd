@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.pos='!H
 
 # Word Embedding
 
-This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from: Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation.
+This text sentiment analysis was completed as an assignment for the course, Environmental Data Science 231: Text and Sentiment Analysis for Environmental Problems. The data was sourced from: Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. GloVe: Global Vectors for Word Representation. The dataset used is Wikipedia 2014 + Gigaword 5 (6B tokens, 400K vocab, uncased, 300d vectors, 822 MB download). For more details on the data and unsupervised learning algorithm, navigate [here](https://nlp.stanford.edu/projects/glove/)
 
 Original assignment instructions can be found [here](https://maro406.github.io/EDS_231-text-sentiment/topic_7.html)
 
@@ -39,3 +39,120 @@ librarian::shelf(broom,
   
 ```
 
+### Load in the Data
+
+```{r}
+glovevecs <- read_table(here('assignments/HW07_WordEmbeddings/data/glove.6B.300d.txt'), col_names = FALSE) %>% 
+  column_to_rownames(., var = "X1")
+```
+
+# 1. Recreate the analyses in the last three chunks (find-synonyms, plot-synonyms, word-math) with the GloVe embeddings. How are they different from the embeddings created from the climbing accident data? Why do you think they are different?
+
+```{r, synonym_function}
+# function to create similarity score
+
+search_synonyms <- function(glovevecs, selected_vector) {
+dat <- glovevecs %*% selected_vector
+    
+similarities <- dat %>%
+        tibble(token = rownames(dat), similarity = dat[,1])
+
+similarities %>%
+       arrange(-similarity) %>%
+        select(c(2,3))
+}
+```
+
+```{r, matrix}
+# convert dataframe to a matrix
+glove_matrix <- data.matrix(glovevecs)
+```
+
+```{r, similarities}
+# use function: give  all word vectors (model) and the word " " to calculate similarities
+fall2 <- search_synonyms(glove_matrix,glove_matrix["fall",])
+slip2 <- search_synonyms(glove_matrix,glove_matrix["slip",])
+
+```
+
+```{r, plot_climbing}
+
+glove_plot <- slip2 %>%
+  mutate(selected = "slip") %>%
+  bind_rows(fall2 %>%
+              mutate(selected = "fall")) %>%
+  group_by(selected) %>%
+  top_n(15, similarity) %>%
+  ungroup %>%
+  mutate(token = reorder(token, similarity)) %>%
+  ggplot(aes(token, similarity, fill = selected)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~selected, scales = "free") +
+  coord_flip() +
+  theme(strip.text = element_text(hjust=0, size=12)) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = NULL, title = "Vectors most similar to 'slip', 'fall' in GloVe Embeddings") + 
+  theme_minimal()
+
+glove_plot
+```
+
+In the climbing data, the top 10 most similar words to `fall` are: fall, rock, ice, accident, foot, avalanche, climber, injuries, ground, rope. The top 10 most similar words to `slip` are: fall, rope, line, short, lead, coley, gentzel, meter, operation, dome. 
+
+In the GloVe data, the top 10 most similar words to `fall` are: fall, decline, falling, prices, fell, rise, percent, falls, drop, spring. The top 10 most similar words to `slip` are: slip, slips, wicket, catch, ball, dravid, slide, balls, slipping, edged. 
+
+The GloVe data contains general words related to `fall` and `slip` across various categories like economics, sports, non-rock climbing accidents. The GloVe data is sourced from Wikipedia, so it makes sense that the climbing data tokens are more precisely aligned with rock climbing than the GloVe data. 
+
+# 2. Run the classic word math equation, "king" - "man" = ?
+
+```{r, king man sim}
+
+k_minus_m <- glove_matrix["king",] - glove_matrix["man",] 
+
+km_df <- as.data.frame(search_synonyms(glove_matrix, k_minus_m))
+
+head(km_df, n = 20) %>% 
+  knitr::kable(caption = "Top 20 Tokens Most Similar to King - Man") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+I am thrilled to see that the second most similar token is King Kalakaua, and another Hawaiian King is in the top 20! 
+
+# 3. Think of three new word math equations. They can involve any words you'd like, whatever catches your interest.
+
+```{r, invasivespecies sim}
+
+invspe <- glove_matrix["invasive",] + glove_matrix["species",] 
+
+invspe_df <- as.data.frame(search_synonyms(glove_matrix, invspe))
+
+head(invspe_df, n = 20) %>% 
+  knitr::kable(caption = "Top 20 Tokens Most Similar to Invasive + Species") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+```{r, climate change}
+
+cc <- glove_matrix["climate",] + glove_matrix["change",] 
+
+cc_df <- as.data.frame(search_synonyms(glove_matrix, cc))
+
+head(cc_df, n = 20) %>% 
+  knitr::kable(caption = "Top 20 Tokens Most Similar to Climate + Change ") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+```{r,  }
+
+alien <- glove_matrix["illegal",] - glove_matrix["alien",] 
+
+alien_df <- as.data.frame(search_synonyms(glove_matrix, alien))
+
+head(alien_df, n = 20) %>% 
+  knitr::kable(caption = "Top 20 Tokens Most Similar to Illegal - Alien") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
