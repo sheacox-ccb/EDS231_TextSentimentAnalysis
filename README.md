@@ -1,5 +1,8 @@
 # EDS231 Text Sentiment Analysis for Environmental Problems
 
+Hi I'm scott
+
+
 This Bren School of Environmental Science & Management Master of Environmental Data Science course, **EDS231 Text and Sentiment Analysis for Environmental Problems**, covers the foundations and applications of natural language processing. Problem sets and class projects will leverage common and emerging text-based data sources relevant to environmental problems, including but not limited to social media feeds (e.g., Twitter) and text documents (e.g., agency reports), and will build capacity and experience in common tools, including text processing and classification, semantics, and natural language parsing.
 
 **Professor:** Mateo Robbins 
